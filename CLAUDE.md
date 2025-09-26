@@ -267,6 +267,74 @@ Key Functions:
 - **API Endpoints**: Contract interaction routes for basket operations
 - **Environment Configuration**: Deployed contract addresses, sponsor API keys
 
+#### **📋 1inch API Integration (LOCKED IMPLEMENTATION)**
+
+##### **Token Purchase API Endpoints**
+```javascript
+// 1. Get Quote (Price Check)
+GET https://api.1inch.dev/swap/v5.2/{chainId}/quote
+Parameters:
+- src: Source token address (PYUSD)
+- dst: Destination token address
+- amount: Amount in wei
+- includeTokensInfo: true
+- includeProtocols: true
+- includeGas: true
+
+// 2. Execute Swap (Token Purchase)
+GET https://api.1inch.dev/swap/v5.2/{chainId}/swap
+Parameters:
+- src: Source token address
+- dst: Destination token address
+- amount: Amount in wei
+- from: User wallet address
+- slippage: Acceptable slippage (1-50)
+- disableEstimate: false
+- allowPartialFill: false
+```
+
+##### **BURP Platform Integration Service**
+```javascript
+class ClusterPurchaseService {
+  async buyClusterTokens(userWallet, pyusdAmount, clusterTokens) {
+    const transactions = [];
+
+    for (const token of clusterTokens) {
+      // Get 1inch quote
+      const quote = await getQuote(
+        '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', // PYUSD Polygon
+        token.address,
+        token.targetAmount
+      );
+
+      // Execute 1inch swap
+      const swapData = await executeSwap(
+        '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+        token.address,
+        token.targetAmount,
+        userWallet,
+        1 // 1% slippage
+      );
+
+      transactions.push(swapData.tx);
+    }
+
+    return transactions;
+  }
+}
+```
+
+##### **Required Token Addresses (Polygon)**
+```javascript
+const TOKENS = {
+  PYUSD: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+  WETH: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+  WBTC: '0x1BFD67037B42Cf2047067bd4F2C47D9BfD6',
+  MATIC: '0x0000000000000000000000000000000000001010',
+  USDC: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'
+};
+```
+
 #### **📋 Deployment Requirements**
 ```bash
 # Additional Dependencies Needed:
@@ -277,7 +345,16 @@ RPC_URL=https://polygon-mainnet.infura.io/v3/your-key
 CLUSTER_BASKET_ADDRESS=0x...deployed-address
 CLUSTER_DEX_ADDRESS=0x...deployed-address
 CLUSTER_PRICING_ADDRESS=0x...deployed-address
+
+# 1inch API Configuration
 ONEINCH_API_KEY=your-1inch-api-key
+ONEINCH_API_URL=https://api.1inch.dev
+ONEINCH_CHAIN_ID=137
+
+# PayPal PyUSD Token Address (Polygon)
+PYUSD_CONTRACT_ADDRESS=0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174
+
+# Pyth Network Configuration
 PYTH_NETWORK_URL=https://hermes.pyth.network
 ```
 
@@ -286,3 +363,4 @@ PYTH_NETWORK_URL=https://hermes.pyth.network
 **ETHGlobal New Delhi 2025 Hackathon Submission**
 
 *Focus: Chat-driven AI investment platform with sponsor integrations (1inch, Pyth, PyUSD, SELF)*
+- to memorize
