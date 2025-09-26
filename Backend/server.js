@@ -7,7 +7,12 @@ const mongoose = require('mongoose');
 const path = require('path');
 
 const { router: authRouter, initializeAuthService } = require('./routes/auth');
+const basketRouter = require('./routes/baskets');
+const pricingRouter = require('./routes/pricing');
+const blockchainRouter = require('./routes/blockchain');
+
 const User = require('./database/models/User');
+const Basket = require('./database/models/Basket');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -93,6 +98,9 @@ const connectDatabase = async () => {
 };
 
 app.use('/auth', authRouter);
+app.use('/api/baskets', basketRouter);
+app.use('/api/pricing', pricingRouter);
+app.use('/api/blockchain', blockchainRouter);
 
 app.get('/health', (req, res) => {
   res.json({
@@ -104,26 +112,47 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.get('/api/blockchain/status', (req, res) => {
+app.get('/api/status', (req, res) => {
   res.json({
     success: true,
     data: {
-      ethereum: {
-        rpc: process.env.ETHEREUM_RPC_URL ? 'configured' : 'not configured',
-        chainId: process.env.CHAIN_ID || '1'
+      server: {
+        status: 'running',
+        environment: process.env.NODE_ENV || 'development',
+        version: '1.0.0',
+        uptime: process.uptime()
       },
-      hedera: {
-        network: process.env.HEDERA_NETWORK || 'testnet',
-        accountId: process.env.HEDERA_ACCOUNT_ID ? 'configured' : 'not configured'
+      database: {
+        status: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+        host: process.env.MONGODB_URI ? 'atlas' : 'local'
+      },
+      blockchain: {
+        ethereum: {
+          rpc: process.env.ETHEREUM_RPC_URL ? 'configured' : 'not configured',
+          chainId: process.env.CHAIN_ID || '137'
+        },
+        contracts: {
+          clusterBasket: process.env.CLUSTER_BASKET_ADDRESS ? 'deployed' : 'not deployed',
+          clusterDEX: process.env.CLUSTER_DEX_ADDRESS ? 'deployed' : 'not deployed',
+          clusterPricing: process.env.CLUSTER_PRICING_ADDRESS ? 'deployed' : 'not deployed'
+        }
       },
       integrations: {
         pyusd: process.env.PYUSD_CONTRACT_ADDRESS ? 'configured' : 'not configured',
-        oneinch: process.env.ONEINCH_API_KEY ? 'configured' : 'not configured',
+        oneinch: process.env.ONEINCH_API_URL ? 'configured' : 'not configured',
         pyth: process.env.PYTH_NETWORK_URL ? 'configured' : 'not configured',
         selfProtocol: process.env.SELF_PROTOCOL_API_KEY ? 'configured' : 'not configured'
+      },
+      features: {
+        metaMaskAuth: true,
+        basketCreation: true,
+        aiBaskets: true,
+        priceFeeds: true,
+        dexAggregation: true,
+        contractInteraction: false // Disabled for API-only mode
       }
     },
-    message: 'Blockchain status retrieved'
+    message: 'BURP platform status retrieved'
   });
 });
 
@@ -134,14 +163,34 @@ app.use((req, res) => {
     message: 'Endpoint not found',
     availableEndpoints: [
       'GET /health',
-      'GET /api/blockchain/status',
+      'GET /api/status',
+
+      '# Authentication Endpoints',
       'POST /auth/nonce',
+      'POST /auth/create-account',
       'POST /auth/authenticate',
-      'POST /auth/signup',
-      'POST /auth/login',
       'GET /auth/profile',
       'PUT /auth/profile',
-      'GET /auth/validate'
+
+      '# Basket Management',
+      'POST /api/baskets/create',
+      'POST /api/baskets/ai-create',
+      'GET /api/baskets/popular',
+      'GET /api/baskets/:basketId',
+      'POST /api/baskets/:basketId/invest',
+      'POST /api/baskets/:basketId/purchase',
+
+      '# Pricing & Market Data',
+      'GET /api/pricing/token/:symbol',
+      'POST /api/pricing/tokens/batch',
+      'GET /api/pricing/token/:symbol/performance',
+      'GET /api/pricing/supported-tokens',
+
+      '# Blockchain Operations (API-only mode)',
+      'GET /api/blockchain/status',
+      'POST /api/blockchain/1inch/quote',
+      'POST /api/blockchain/1inch/swap',
+      'GET /api/blockchain/contracts/info'
     ]
   });
 });
@@ -166,7 +215,13 @@ const startServer = async () => {
 
 📍 Server: http://localhost:${PORT}
 🔗 Health: http://localhost:${PORT}/health
-📡 Blockchain Status: http://localhost:${PORT}/api/blockchain/status
+📊 Status: http://localhost:${PORT}/api/status
+
+🔗 Key Endpoints:
+   • MetaMask Auth: POST /auth/create-account
+   • AI Baskets: GET /api/baskets/popular
+   • Token Prices: GET /api/pricing/token/:symbol
+   • 1inch Integration: POST /api/blockchain/1inch/quote
 
 🔧 Environment: ${process.env.NODE_ENV || 'development'}
 💾 Database: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}
