@@ -27,7 +27,8 @@ contract ClusterPricing is Ownable {
 
     IPyth public pyth;
 
-    constructor(address _pyth) {
+    // ✅ Pass msg.sender to Ownable
+    constructor(address _pyth) Ownable(msg.sender) {
         pyth = IPyth(_pyth);
     }
 

@@ -29,7 +29,7 @@ contract ClusterDEX is Ownable, ReentrancyGuard {
     event SwapExecuted(address indexed tokenIn, address indexed tokenOut, uint256 amountIn, uint256 amountOut);
     event BasketPurchaseCompleted(string indexed basketId, address indexed user, uint256 totalSpent);
 
-    constructor(address _router) {
+    constructor(address _router) Ownable(msg.sender) {
         router = I1inchRouter(_router);
     }
 
@@ -44,7 +44,6 @@ contract ClusterDEX is Ownable, ReentrancyGuard {
         uint256 amountIn,
         bytes calldata oneInchData
     ) external nonReentrant returns (uint256) {
-        // Approvals & token transfers to be handled in production
         uint256 amountOut = router.swap(oneInchData);
         emit SwapExecuted(tokenIn, tokenOut, amountIn, amountOut);
         return amountOut;

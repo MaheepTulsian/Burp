@@ -40,7 +40,8 @@ contract ClusterBasket is Ownable, ReentrancyGuard {
         _;
     }
 
-    constructor(address _aiAgent, address _dex, address _pricing) {
+    // ✅ Explicitly pass msg.sender to Ownable
+    constructor(address _aiAgent, address _dex, address _pricing) Ownable(msg.sender) {
         aiAgent = _aiAgent;
         dex = ClusterDEX(_dex);
         pricing = ClusterPricing(_pricing);
