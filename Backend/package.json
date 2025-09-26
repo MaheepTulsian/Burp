@@ -36,7 +36,9 @@
     "portfolio",
     "ai",
     "ethereum",
-    "metamask"
+    "rainbow-kit",
+    "wagmi",
+    "multi-wallet"
   ],
   "author": "BURP Team",
   "license": "MIT"
