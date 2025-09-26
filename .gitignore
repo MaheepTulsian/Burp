@@ -80,3 +80,5 @@ build/
 # Temporary files
 tmp/
 temp/
+
+CLAUDE.md
