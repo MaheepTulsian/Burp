@@ -2,62 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
-/* BURP - Light Blue Theme Design System */
+/* BURP Design System - Light Blue Theme
+All colors MUST be HSL for consistency */
 
 @layer base {
   :root {
     /* Light Blue Theme Colors */
-    --background: 206 100% 97%;          /* #eaf6ff */
-    --foreground: 215 25% 27%;           /* Dark gray text */
-
-    --card: 0 0% 100%;                   /* White cards */
-    --card-foreground: 215 25% 27%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
-
-    --primary: 206 100% 85%;             /* #cfeeff - light blue */
-    --primary-foreground: 215 25% 27%;
-
-    --secondary: 206 50% 92%;            /* Lighter blue */
-    --secondary-foreground: 215 25% 27%;
-
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 16% 47%;
-
-    --accent: 206 100% 85%;
-    --accent-foreground: 215 25% 27%;
-
+    --background: 0 0% 100%;
+    --foreground: 220 20% 20%;
+    
+    /* Light Blue Primary Palette */
+    --primary-light: 210 100% 97%;
+    --primary: 210 100% 85%; 
+    --primary-medium: 210 100% 75%;
+    --primary-dark: 210 100% 65%;
+    --primary-foreground: 220 20% 20%;
+    
+    /* CTA and Interactive Elements */
+    --cta: 210 85% 60%;
+    --cta-hover: 210 85% 55%;
+    --cta-foreground: 0 0% 100%;
+    
+    /* Card and Surface Colors */
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 20%;
+    --card-border: 210 30% 90%;
+    
+    /* Muted and Secondary */
+    --muted: 210 100% 95%;
+    --muted-foreground: 220 15% 50%;
+    --secondary: 210 100% 92%;
+    --secondary-foreground: 220 20% 20%;
+    
+    /* Accent Colors */
+    --accent: 210 100% 88%;
+    --accent-foreground: 220 20% 20%;
+    
+    /* Utility Colors */
+    --border: 210 30% 88%;
+    --input: 210 30% 95%;
+    --ring: 210 85% 60%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 210 25% 90%;
-    --input: 210 25% 90%;
-    --ring: 206 100% 85%;
-
-    --radius: 12px;
-
-    /* BURP Custom Colors */
-    --burp-blue-light: 206 100% 97%;     /* #eaf6ff */
-    --burp-blue: 206 100% 85%;           /* #cfeeff */
-    --burp-blue-dark: 206 80% 70%;       /* Darker blue for CTAs */
-    --burp-gray: 215 25% 27%;            /* Text color */
-    --burp-gray-light: 215 16% 47%;      /* Muted text */
-
+    --destructive-foreground: 0 0% 100%;
+    
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(var(--burp-blue-light)), hsl(var(--burp-blue)));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(var(--burp-blue-light)));
-    --gradient-button: linear-gradient(135deg, hsl(var(--burp-blue)), hsl(var(--burp-blue-dark)));
-
+    --gradient-primary: linear-gradient(135deg, hsl(210, 100%, 95%), hsl(210, 100%, 85%));
+    --gradient-hero: linear-gradient(135deg, hsl(210, 100%, 97%) 0%, hsl(210, 100%, 88%) 50%, hsl(210, 85%, 75%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%) 0%, hsl(210, 100%, 98%) 100%);
+    
     /* Shadows */
-    --shadow-soft: 0 4px 20px -2px hsl(var(--burp-blue) / 0.1);
-    --shadow-medium: 0 8px 30px -4px hsl(var(--burp-blue) / 0.15);
-    --shadow-strong: 0 20px 40px -8px hsl(var(--burp-blue) / 0.2);
-    --shadow-glow: 0 0 40px hsl(var(--burp-blue) / 0.4);
+    --shadow-sm: 0 2px 4px hsl(210, 85%, 60%, 0.08);
+    --shadow-md: 0 4px 12px hsl(210, 85%, 60%, 0.12);
+    --shadow-lg: 0 8px 24px hsl(210, 85%, 60%, 0.15);
+    --shadow-card: 0 4px 16px hsl(210, 85%, 60%, 0.08);
+    
+    /* Border Radius */
+    --radius: 0.75rem;
 
-    /* Animation Timing */
-    --animation-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-    --animation-spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    /* Animation Timings */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 }
 
@@ -70,53 +74,64 @@
     @apply bg-background text-foreground;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
+}
 
-  /* Custom Utility Classes */
-  .gradient-hero {
+@layer components {
+  /* Hero Styles */
+  .hero-gradient {
     background: var(--gradient-hero);
   }
-
-  .gradient-card {
+  
+  .card-gradient {
     background: var(--gradient-card);
+    box-shadow: var(--shadow-card);
   }
-
-  .gradient-button {
-    background: var(--gradient-button);
-  }
-
-  .shadow-soft {
-    box-shadow: var(--shadow-soft);
-  }
-
-  .shadow-medium {
-    box-shadow: var(--shadow-medium);
-  }
-
-  .shadow-strong {
-    box-shadow: var(--shadow-strong);
-  }
-
-  .shadow-glow {
-    box-shadow: var(--shadow-glow);
-  }
-
+  
+  /* Animation Classes */
   .animate-fade-in {
-    animation: fadeIn 0.6s var(--animation-smooth);
+    animation: fadeIn 0.6s ease-out;
   }
-
+  
   .animate-slide-up {
-    animation: slideUp 0.8s var(--animation-smooth);
+    animation: slideUp 0.8s ease-out;
   }
-
+  
   .animate-scale-in {
-    animation: scaleIn 0.4s var(--animation-spring);
+    animation: scaleIn 0.4s ease-out;
   }
-
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
+  
+  /* Treasure Box Animation */
+  .treasure-section {
+    transform-origin: center center;
+    transition: var(--transition-smooth);
   }
+  
+  /* Interactive Elements */
+  .hover-lift {
+    transition: var(--transition-smooth);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  /* Cluster Card Styles */
+  .cluster-card {
+    background: var(--gradient-card);
+    border: 1px solid hsl(var(--card-border));
+    box-shadow: var(--shadow-card);
+    transition: var(--transition-smooth);
+  }
+  
+  .cluster-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+}
 
-  /* Keyframes for animations */
+@layer utilities {
+  /* Custom Keyframes */
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -127,7 +142,7 @@
       transform: translateY(0);
     }
   }
-
+  
   @keyframes slideUp {
     from {
       opacity: 0;
@@ -138,7 +153,7 @@
       transform: translateY(0);
     }
   }
-
+  
   @keyframes scaleIn {
     from {
       opacity: 0;
@@ -148,29 +163,5 @@
       opacity: 1;
       transform: scale(1);
     }
-  }
-
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-
-  @keyframes treasureOpen {
-    from {
-      transform: scale(0) rotate(0deg);
-      opacity: 0;
-    }
-    to {
-      transform: scale(1) rotate(360deg);
-      opacity: 1;
-    }
-  }
-
-  .animate-treasure-open {
-    animation: treasureOpen 0.6s var(--animation-spring);
   }
 }
