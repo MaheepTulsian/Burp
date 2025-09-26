@@ -5,6 +5,7 @@ const TransactionService = require('./TransactionService');
 const StrategyService = require('./StrategyService');
 const AgentLogService = require('./AgentLogService');
 const InvestAIService = require('./InvestAIService');
+const AuthService = require('./AuthService');
 
 module.exports = {
   BaseService,
@@ -13,5 +14,6 @@ module.exports = {
   TransactionService,
   StrategyService,
   AgentLogService,
-  InvestAIService
+  InvestAIService,
+  AuthService
 };
