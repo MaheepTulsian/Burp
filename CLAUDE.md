@@ -105,28 +105,181 @@ BURP transforms investment accessibility through AI-powered cluster architecture
 
 ### **Core Infrastructure**
 - **Framework**: Node.js with Express
-- **Authentication**: MetaMask wallet signatures + JWT
+- **Authentication**: Frontend MetaMask → Backend account creation
 - **Database**: MongoDB for user and portfolio data
 - **API Design**: RESTful endpoints for all operations
 
+### **Authentication Flow (LOCKED SPECIFICATION)**
+```
+1. Frontend: MetaMask signature verification
+2. Frontend → Backend: Send verified wallet + signature
+3. Backend: Create/verify account + issue JWT
+4. Backend → Frontend: Return session token
+```
+
 ### **Essential API Endpoints**
 ```
-# Authentication
-POST /auth/nonce              - Generate wallet signature nonce
-POST /auth/authenticate       - Verify signature and issue JWT
-GET  /auth/profile           - Get user profile data
+# Account Management (Frontend MetaMask Integration)
+POST /api/auth/create-account  - Create account from frontend verification
+POST /auth/nonce               - Generate wallet signature nonce
+POST /auth/authenticate        - Verify signature and issue JWT
+GET  /auth/profile            - Get user profile data
+
+# Contract Integration
+POST /api/baskets/create       - AI creates investment basket
+POST /api/baskets/:id/invest   - User invests in basket
+GET  /api/prices/:token        - Get real-time token price
+POST /api/swaps/execute        - Execute 1inch swap
 
 # Core Platform
-GET  /health                 - System health check
-GET  /api/blockchain/status  - Integration status check
+GET  /health                   - System health check
+GET  /api/blockchain/status    - Integration status check
+```
+
+### **Account Creation Service (LOCKED IMPLEMENTATION)**
+```javascript
+// Frontend → Backend Account Creation Flow
+POST /api/auth/create-account
+{
+  "walletAddress": "0x742d35Cc6634C0532925a3b8d6Ac6C3D0Ed8C32",
+  "signature": "0x...",        // Signed message proving ownership
+  "nonce": "abc123",           // Anti-replay protection
+  "userProfile": {             // Optional user data
+    "email": "user@example.com",
+    "preferences": {...}
+  }
+}
+
+// Backend Response
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "userId",
+      "walletAddress": "0x...",
+      "email": "user@example.com",
+      "createdAt": "2025-01-01T00:00:00Z"
+    },
+    "token": "jwt-session-token"
+  }
+}
+```
+
+### **Enhanced User Model (LOCKED SCHEMA)**
+```javascript
+{
+  walletAddress: String (unique, required),
+  email: String (optional),
+  preferences: Object,
+  accountCreatedAt: Date,
+  lastLoginAt: Date,
+  isActive: Boolean
+}
 ```
 
 ### **Current Implementation Status**
-✅ **MetaMask wallet authentication**
-✅ **Secure nonce-based signature verification**
-✅ **JWT session management**
-✅ **Clean API architecture**
-✅ **Production-ready backend**
+
+#### **✅ Backend (Complete)**
+- **MetaMask wallet authentication**
+- **Secure nonce-based signature verification**
+- **JWT session management**
+- **Clean API architecture**
+- **Production-ready authentication microservice**
+
+#### **✅ Smart Contracts (Complete & LOCKED)**
+
+##### **ClusterBasket.sol** - Core Investment Management
+```solidity
+// LOCKED CONTRACT SPECIFICATIONS
+- AI-authorized basket creation via onlyAI modifier
+- Weighted portfolio management (weights sum to 100%)
+- User investment tracking with UserHolding struct
+- Autonomous rebalancing by SELF AI agents
+- Integration with ClusterDEX and ClusterPricing contracts
+
+Key Functions:
+• createBasketFromAI() - AI creates new investment baskets
+• investInBasket() - Users invest in existing baskets
+• updateBasketWeights() - AI rebalances portfolio composition
+• calculateUserShare() - Proportional ownership calculation
+```
+
+##### **ClusterDEX.sol** - 1inch & PyUSD Integration
+```solidity
+// LOCKED CONTRACT SPECIFICATIONS
+- Direct I1inchRouter integration for optimal swaps
+- IPyUSD interface for PayPal USD operations
+- Batch swapping for multi-token basket purchases
+- Configurable slippage protection (default 5%)
+- MEV protection via ReentrancyGuard
+
+Key Functions:
+• executeSwapVia1inch() - Execute single token swaps
+• batchSwapForBasket() - Multi-token swaps for basket purchases
+• setSlippageProtection() - Risk management controls
+```
+
+##### **ClusterPricing.sol** - Pyth Network Integration
+```solidity
+// LOCKED CONTRACT SPECIFICATIONS
+- IPyth interface for real-time price feeds
+- Price staleness detection (5-minute max age)
+- Token-to-PriceID mapping for multi-asset support
+- Batch price updates for gas efficiency
+- Portfolio valuation calculations
+
+Key Functions:
+• getPythPrice() - Fetch real-time prices from Pyth
+• isPriceStale() - Validate price data freshness
+• updateAllPrices() - Batch price feed updates
+• calculateBasketTotalValue() - Real-time portfolio valuation
+```
+
+#### **🔒 SPONSOR INTEGRATION ANALYSIS (LOCKED)**
+
+##### **✅ 1inch DEX Aggregation**
+- **Direct Integration**: I1inchRouter.swap() calls in ClusterDEX.sol
+- **Optimal Routing**: Leverages 1inch's aggregation for best prices
+- **Batch Support**: batchSwapForBasket() for complex portfolio purchases
+- **Production Ready**: Interface matches 1inch V5 router specification
+
+##### **✅ Pyth Network Oracles**
+- **Real-time Feeds**: IPyth.getPrice() implementation in ClusterPricing.sol
+- **Staleness Protection**: 5-minute max age validation
+- **Multi-chain Ready**: Standard Pyth interface for cross-chain deployment
+- **Gas Efficient**: Batch price updates via updatePriceFeeds()
+
+##### **✅ PayPal PyUSD Integration**
+- **Token Interface**: IPyUSD with transfer/transferFrom/balanceOf
+- **Settlement Currency**: Primary payment method in ClusterDEX
+- **Mainstream Access**: Familiar payment method for traditional users
+- **Global Compatibility**: USD-pegged stability across markets
+
+##### **✅ SELF Protocol AI Agents**
+- **Authorization Control**: onlyAI modifier in ClusterBasket.sol
+- **Signature Verification**: aiSignature parameter for agent authentication
+- **Autonomous Operations**: AI creates and rebalances baskets autonomously
+- **Decentralized Ready**: Configurable agent address for distributed compute
+
+#### **🔄 Integration Layer (Next Step)**
+- **Contract ABIs & Web3 Provider**: Extract ABIs after deployment, setup ethers.js
+- **Additional Backend Services**: ContractService, BasketService, DEXService, PricingService
+- **API Endpoints**: Contract interaction routes for basket operations
+- **Environment Configuration**: Deployed contract addresses, sponsor API keys
+
+#### **📋 Deployment Requirements**
+```bash
+# Additional Dependencies Needed:
+npm install @1inch/fusion-sdk @pythnetwork/client axios
+
+# Environment Variables Required:
+RPC_URL=https://polygon-mainnet.infura.io/v3/your-key
+CLUSTER_BASKET_ADDRESS=0x...deployed-address
+CLUSTER_DEX_ADDRESS=0x...deployed-address
+CLUSTER_PRICING_ADDRESS=0x...deployed-address
+ONEINCH_API_KEY=your-1inch-api-key
+PYTH_NETWORK_URL=https://hermes.pyth.network
+```
 
 ---
 

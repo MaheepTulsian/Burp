@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const AuthService = require('../services/AuthService');
+const AccountService = require('../services/AccountService');
 const { authenticateToken } = require('../middleware/auth');
 const { createSignMessage } = require('../utils/walletAuth');
 
 let authService;
+let accountService;
 
 const initializeAuthService = (userModel) => {
   authService = new AuthService(userModel);
+  accountService = new AccountService(userModel);
 };
 
 router.post('/nonce', async (req, res) => {
@@ -140,6 +143,61 @@ router.post('/logout', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json(authService.formatError(error, 500));
+  }
+});
+
+// NEW: Account creation endpoint for frontend MetaMask integration
+router.post('/create-account', async (req, res) => {
+  try {
+    const { walletAddress, signature, nonce, userProfile } = req.body;
+
+    if (!walletAddress || !signature || !nonce) {
+      return res.status(400).json({
+        success: false,
+        message: 'Wallet address, signature, and nonce are required'
+      });
+    }
+
+    const result = await accountService.createAccount(
+      walletAddress,
+      signature,
+      nonce,
+      userProfile || {}
+    );
+
+    const statusCode = result.data.isNewAccount ? 201 : 200;
+    res.status(statusCode).json(result);
+
+  } catch (error) {
+    res.status(400).json(accountService.formatError(error, 400));
+  }
+});
+
+// Account management endpoints
+router.put('/profile', authenticateToken, async (req, res) => {
+  try {
+    const result = await accountService.updateProfile(req.user.userId, req.body);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json(accountService.formatError(error, 400));
+  }
+});
+
+router.delete('/account', authenticateToken, async (req, res) => {
+  try {
+    const result = await accountService.deactivateAccount(req.user.userId);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json(accountService.formatError(error, 400));
+  }
+});
+
+router.get('/stats', authenticateToken, async (req, res) => {
+  try {
+    const result = await accountService.getAccountStats();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json(accountService.formatError(error, 500));
   }
 });
 
