@@ -66,7 +66,7 @@ const Landing = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             onClick={handleGetStarted}
-            className="btn-premium px-8 py-3 rounded-2xl font-semibold text-lg"
+            className="btn-premium px-8 py-3 rounded-2xl font-semibold text-lg border"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
