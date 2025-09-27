@@ -24,7 +24,7 @@ const user_preference = {
 
 // ==== System Prompt ====
 const PORTFOLIO_AGENT_SYSTEM_PROMPT = `
-You are InvestAI's Portfolio Construction Agent.
+You are Burp's Portfolio Construction Agent.
 
 You receive:
 1. User's investment profile in JSON format.

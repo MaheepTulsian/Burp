@@ -66,7 +66,7 @@ router.post('/generate-portfolio', authenticateToken, async (req, res) => {
         riskLevel: ['conservative', 'moderate', 'aggressive'][Math.floor(userProfile.collected_info.risk_tolerance / 3.5)],
         category: 'ai-generated',
         aiMetadata: {
-          model: 'InvestAI-v1',
+          model: 'Burp-v1',
           confidence: 0.85,
           marketConditions: 'neutral',
           generatedAt: new Date()

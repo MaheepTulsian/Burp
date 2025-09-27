@@ -13,77 +13,149 @@ const Cluster = () => {
   
   const [cluster, setCluster] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
+  const [conversationHistory, setConversationHistory] = useState([]);
   const [animationPhase, setAnimationPhase] = useState('initial'); // initial, treasure, summary
   const [showSummary, setShowSummary] = useState(false);
   const [chatComplete, setChatComplete] = useState(false);
+  const [isWaitingForAI, setIsWaitingForAI] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [userProfile, setUserProfile] = useState(null);
 
-  // Initialize chat with hardcoded data (will be replaced with API calls later)
+  // Initialize chat with AI agent introduction
   useEffect(() => {
-    // Hardcoded initial chat messages for cluster creation
-    const initialMessages = [
-      {
+    const startConversation = async () => {
+      // Start with AI introduction message
+      const initialMessage = {
         id: 1,
-        sender: 'ai',
-        message: "Hello! I'm your AI investment advisor. I'll help you create a personalized investment cluster. What's your risk tolerance?",
-        timestamp: new Date(Date.now() - 300000),
+        type: 'bot',
+        message: "Hello! I'm Burp, your crypto investment assistant. I'll guide you through creating a personalized investment portfolio. Let me start by introducing some crypto categories: Stablecoins (low volatility like USDC), Utility Tokens (services like Chainlink), Governance Tokens (voting power like AAVE), Platform Tokens (ecosystems like Ethereum), and others like Gaming or AI tokens. Which coins or categories interest you for investment?",
+        timestamp: Date.now(),
         isSystem: true
-      },
-      {
-        id: 2,
-        sender: 'user',
-        message: "I'm looking for moderate risk investments",
-        timestamp: new Date(Date.now() - 240000)
-      },
-      {
-        id: 3,
-        sender: 'ai',
-        message: "Great! I'll create a balanced portfolio for you. What investment amount are you considering?",
-        timestamp: new Date(Date.now() - 180000),
-        isSystem: true
-      },
-      {
-        id: 4,
-        sender: 'user',
-        message: "$5000",
-        timestamp: new Date(Date.now() - 120000)
-      },
-      {
-        id: 5,
-        sender: 'ai',
-        message: "Perfect! Based on your preferences, I've created a diversified cluster with DeFi blue chips, Layer 2 tokens, and stable yields. Would you like to proceed with this investment cluster?",
-        timestamp: new Date(Date.now() - 60000),
-        isSystem: true,
-        isFinal: true
-      }
-    ];
-
-    setChatMessages(initialMessages);
-    setChatComplete(true);
-    
-    // Set hardcoded cluster data that will be created at the end of chat
-    const newCluster = {
-      id: 'new-cluster-' + Date.now(),
-      name: 'AI Moderate Risk Cluster',
-      description: 'A balanced portfolio of DeFi and Layer 2 tokens with stable yields',
-      tokens: [
-        { symbol: 'ETH', percentage: 30, name: 'Ethereum' },
-        { symbol: 'MATIC', percentage: 25, name: 'Polygon' },
-        { symbol: 'AAVE', percentage: 20, name: 'Aave' },
-        { symbol: 'UNI', percentage: 15, name: 'Uniswap' },
-        { symbol: 'USDC', percentage: 10, name: 'USD Coin' }
-      ],
-      expectedReturn: '12-18%',
-      riskLevel: 'Moderate',
-      minInvestment: '$100',
-      totalValue: '$1.2M'
+      };
+      
+      setChatMessages([initialMessage]);
+      setConversationHistory([
+        { role: 'assistant', content: initialMessage.message }
+      ]);
     };
 
-    // Simulate cluster creation after chat completion
-    setTimeout(() => {
-      setCluster(newCluster);
-    }, 1000);
-    
+    startConversation();
   }, []);
+
+  // Send message to AI agent API
+  const sendToAI = async (userMessage) => {
+    try {
+      setIsWaitingForAI(true);
+      
+      const authToken = localStorage.getItem('burp_auth_token');
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}/api/agents/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          conversationHistory: conversationHistory
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Check if we have a complete profile
+        if (result.data.user_analysis?.status === 'profile_complete') {
+          setUserProfile(result.data.user_analysis);
+          
+          // Generate final summary message
+          const summaryMessage = `Perfect! Based on our conversation, I've created a ${result.data.portfolio?.selected_tokens?.length || 5}-token portfolio focusing on ${result.data.user_analysis.collected_info.investment_theme} with ${result.data.user_analysis.collected_info.risk_tolerance}/10 risk tolerance for ${result.data.user_analysis.collected_info.time_horizon.replace('_', ' ')} investment. This portfolio includes ${result.data.portfolio?.selected_tokens?.slice(0, 3).map(t => t.symbol).join(', ')}. Would you like to proceed with creating this investment cluster?`;
+          
+          return {
+            message: summaryMessage,
+            isComplete: true,
+            portfolio: result.data.portfolio
+          };
+        }
+        
+        return {
+          message: result.data.chat_response || "I understand. Could you tell me more about your preferences?",
+          isComplete: false
+        };
+      } else {
+        throw new Error(result.message || 'Failed to get AI response');
+      }
+    } catch (error) {
+      console.error('AI chat error:', error);
+      return {
+        message: "I'm having trouble connecting. Could you please repeat that?",
+        isComplete: false
+      };
+    } finally {
+      setIsWaitingForAI(false);
+    }
+  };
+
+  // Handle user input (this will be called from a new input component)
+  const handleUserInput = async (userMessage) => {
+    // Add user message to chat
+    const userMsg = {
+      id: chatMessages.length + 1,
+      type: 'user',
+      message: userMessage,
+      timestamp: Date.now()
+    };
+    
+    setChatMessages(prev => [...prev, userMsg]);
+    setConversationHistory(prev => [...prev, { role: 'user', content: userMessage }]);
+
+    // Get AI response
+    const aiResponse = await sendToAI(userMessage);
+    
+    // Add AI response to chat
+    const aiMsg = {
+      id: chatMessages.length + 2,
+      type: 'bot',
+      message: aiResponse.message,
+      timestamp: Date.now(),
+      isSystem: true,
+      isFinal: aiResponse.isComplete
+    };
+    
+    setChatMessages(prev => [...prev, aiMsg]);
+    setConversationHistory(prev => [...prev, { role: 'assistant', content: aiResponse.message }]);
+    
+    // If conversation is complete, set up for decision
+    if (aiResponse.isComplete) {
+      setChatComplete(true);
+      
+      // Create cluster from portfolio data
+      if (aiResponse.portfolio) {
+        const newCluster = {
+          id: 'ai-cluster-' + Date.now(),
+          name: userProfile?.collected_info.investment_theme || 'AI Investment Cluster',
+          description: aiResponse.portfolio.portfolio_summary || 'AI-generated investment portfolio',
+          tokens: aiResponse.portfolio.selected_tokens.map(token => ({
+            symbol: token.symbol,
+            percentage: token.allocation,
+            name: token.name || token.symbol,
+            rationale: token.rationale
+          })),
+          expectedReturn: `${12 + (userProfile?.collected_info.risk_tolerance || 5) * 2}%+`,
+          riskLevel: userProfile?.collected_info.risk_tolerance > 7 ? 'High' : userProfile?.collected_info.risk_tolerance < 4 ? 'Low' : 'Moderate',
+          minInvestment: '$100',
+          totalValue: '$' + (Math.random() * 5 + 1).toFixed(1) + 'M',
+          aiGenerated: true,
+          userProfile: userProfile
+        };
+        
+        setTimeout(() => {
+          setCluster(newCluster);
+        }, 1000);
+      }
+    }
+    
+    setCurrentStep(prev => prev + 1);
+  };
 
   // Handle user decision to create cluster (Yes/No)
   const handleUserDecision = (decision) => {
@@ -145,8 +217,10 @@ const Cluster = () => {
             <Chat 
               messages={chatMessages}
               onUserDecision={handleUserDecision}
+              onUserInput={handleUserInput}
               showDecision={chatComplete}
               clusterName="Your AI Investment Cluster"
+              isWaitingForAI={isWaitingForAI}
             />
           </motion.div>
         ) : animationPhase === 'treasure' && !showSummary ? (

@@ -1,13 +1,15 @@
 // Chat interface component for cluster analysis
-// Features bot messages and user decision (Yes/No) at the end
+// Features bot messages, user input, and decision (Yes/No) at the end
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const Chat = ({ messages, onUserDecision, showDecision, clusterName }) => {
+const Chat = ({ messages, onUserDecision, onUserInput, showDecision, clusterName, isWaitingForAI }) => {
   const [visibleMessages, setVisibleMessages] = useState([]);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [showDecisionButtons, setShowDecisionButtons] = useState(false);
+  const [showInputBox, setShowInputBox] = useState(true);
+  const [userInput, setUserInput] = useState('');
   const [userChoice, setUserChoice] = useState(null);
   const messagesEndRef = useRef(null);
 
@@ -16,29 +18,33 @@ const Chat = ({ messages, onUserDecision, showDecision, clusterName }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Display messages with typing effect
+  // Update visible messages when messages prop changes
   useEffect(() => {
-    if (messages.length === 0) return;
-
-    const timer = setTimeout(() => {
-      if (currentMessageIndex < messages.length) {
-        setVisibleMessages(prev => [...prev, messages[currentMessageIndex]]);
-        setCurrentMessageIndex(prev => prev + 1);
-      } else if (showDecision && !showDecisionButtons) {
-        // Show decision buttons after all messages
-        setTimeout(() => {
-          setShowDecisionButtons(true);
-        }, 1000);
-      }
-    }, currentMessageIndex === 0 ? 500 : 2000); // First message faster, then delay between messages
-
-    return () => clearTimeout(timer);
-  }, [currentMessageIndex, messages.length, showDecision, showDecisionButtons]);
+    setVisibleMessages(messages);
+    if (showDecision && messages.length > 0) {
+      setShowDecisionButtons(true);
+      setShowInputBox(false);
+    }
+  }, [messages, showDecision]);
 
   // Auto-scroll when new messages appear
   useEffect(() => {
     scrollToBottom();
   }, [visibleMessages]);
+
+  const handleSendMessage = () => {
+    if (userInput.trim() && onUserInput) {
+      onUserInput(userInput);
+      setUserInput('');
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   const handleDecision = (decision) => {
     setUserChoice(decision);
@@ -143,7 +149,7 @@ const Chat = ({ messages, onUserDecision, showDecision, clusterName }) => {
         </AnimatePresence>
 
         {/* Premium Typing Indicator */}
-        {currentMessageIndex < messages.length && (
+        {isWaitingForAI && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -189,6 +195,44 @@ const Chat = ({ messages, onUserDecision, showDecision, clusterName }) => {
 
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Premium Input Box */}
+      {showInputBox && (
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-6 bg-gradient-to-r from-primary-light to-background border-t-2 border-gold"
+        >
+          <div className="flex space-x-4">
+            <div className="flex-1 relative">
+              <textarea
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message..."
+                disabled={isWaitingForAI}
+                className="w-full p-4 bg-card border-2 border-gold rounded-2xl resize-none focus:outline-none focus:border-gold-dark text-foreground placeholder-muted-foreground"
+                rows="2"
+              />
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleSendMessage}
+              disabled={!userInput.trim() || isWaitingForAI}
+              className="px-6 py-4 bg-gradient-to-r from-gold to-gold-dark hover:from-gold-dark hover:to-gold text-foreground rounded-2xl font-bold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isWaitingForAI ? (
+                <div className="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              )}
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Premium Decision Buttons */}
       {showDecisionButtons && !userChoice && (

@@ -9,7 +9,7 @@ dotenv.config();
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const INVESTMENT_AGENT_SYSTEM_PROMPT = `
-  You are InvestAI's User Analysis Agent - a crypto investment assistant that guides users through creating personalized investment portfolios. You must follow a structured conversation flow to collect specific information.
+  You are Burp's User Analysis Agent - a crypto investment assistant that guides users through creating personalized investment portfolios. You must follow a structured conversation flow to collect specific information.
 
   CORE MISSION: Guide users through 6 steps to build their crypto investment profile, then output a final JSON with their complete preferences.
 
@@ -126,13 +126,13 @@ async function askLLM(userMessage) {
     console.log("\n👋 Chat ended.");
     process.exit(0);
   } else {
-    console.log(`\nInvestAI > ${reply}\n`);
+    console.log(`\nBurp > ${reply}\n`);
     history.push({ role: "assistant", content: reply });
   }
 }
 
 async function main() {
-  console.log("👋 Welcome to InvestAI CLI!\n");
+  console.log("👋 Welcome to Burp CLI!\n");
   await askLLM("Start the conversation.");
 
   const rl = readline.createInterface({

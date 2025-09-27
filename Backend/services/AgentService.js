@@ -293,29 +293,80 @@ class AgentService extends BaseService {
 
   async processUserChat(chatMessage, conversationHistory = []) {
     try {
-      const analysisResult = await this.analyzeUserPreferences({
+      // Simulate the Agent1 conversation flow
+      const conversationLength = conversationHistory.length;
+      
+      // Extract user preferences from the current message and conversation
+      const userPreferences = {
         theme: this.extractThemeFromChat(chatMessage),
         timeHorizon: this.extractTimeHorizonFromChat(chatMessage),
         riskLevel: this.extractRiskFromChat(chatMessage),
         preferences: this.extractPreferencesFromChat(chatMessage)
-      });
+      };
 
-      if (!analysisResult.success) {
-        return analysisResult;
+      // Determine conversation step based on history length
+      let nextMessage = '';
+      let isComplete = false;
+      
+      if (conversationLength <= 2) {
+        // Step 2: Theme confirmation
+        nextMessage = `Great choice! I see you're interested in ${userPreferences.theme}. Would you like to add any specific preferences or modify anything about this theme?`;
+      } else if (conversationLength <= 4) {
+        // Step 3: Timeline
+        nextMessage = "Perfect! Now, what's your investment timeline - are you thinking short-term (months), medium-term (1-2 years), or long-term (3+ years)?";
+      } else if (conversationLength <= 6) {
+        // Step 4: Specific preferences
+        nextMessage = "Excellent! Do you have any specific preferences? For example, avoiding speculative assets like meme coins, preferring established projects, or including staking options?";
+      } else {
+        // Step 5: Generate final portfolio
+        isComplete = true;
+        
+        // Create complete user profile
+        const finalProfile = {
+          status: "profile_complete",
+          collected_info: {
+            investment_theme: userPreferences.theme,
+            risk_tolerance: userPreferences.riskLevel,
+            time_horizon: userPreferences.timeHorizon,
+            preferred_sectors: this.extractSectors({ theme: userPreferences.theme }),
+            specific_preferences: userPreferences.preferences
+          },
+          conversation_summary: `User profile complete: ${userPreferences.theme} with ${userPreferences.riskLevel}/10 risk for ${userPreferences.timeHorizon} timeline`
+        };
+
+        // Generate portfolio
+        const portfolioResult = await this.generatePortfolio(finalProfile);
+
+        if (portfolioResult.success) {
+          return this.formatSuccess({
+            user_analysis: finalProfile,
+            portfolio: portfolioResult.data,
+            chat_response: this.generateFinalChatResponse(finalProfile, portfolioResult.data),
+            is_complete: true
+          }, 'Profile complete and portfolio generated');
+        }
       }
 
-      const portfolioResult = await this.generatePortfolio(analysisResult.data);
-
       return this.formatSuccess({
-        user_analysis: analysisResult.data,
-        portfolio: portfolioResult.success ? portfolioResult.data : null,
-        chat_response: this.generateChatResponse(chatMessage, portfolioResult.data),
-        processed_at: new Date().toISOString()
-      }, 'Chat processed and portfolio generated');
+        user_analysis: null,
+        portfolio: null,
+        chat_response: nextMessage,
+        is_complete: false,
+        step: Math.floor(conversationLength / 2) + 1
+      }, 'Conversation continuing');
 
     } catch (error) {
       return this.formatError(error, 500, 'Failed to process user chat');
     }
+  }
+
+  generateFinalChatResponse(userProfile, portfolioData) {
+    const tokens = portfolioData.selected_tokens || [];
+    const mainTokens = tokens.slice(0, 3).map(t => t.symbol).join(', ');
+    const theme = userProfile.collected_info.investment_theme;
+    const risk = userProfile.collected_info.risk_tolerance;
+    
+    return `Perfect! Based on our conversation, I've created a ${tokens.length}-token portfolio focusing on ${theme} with ${risk}/10 risk tolerance. Your portfolio includes ${mainTokens} and other carefully selected assets. The expected return is ${12 + risk * 2}%+ annually with proper diversification across ${portfolioData.risk_analysis?.diversification_score || 'multiple'} categories. Would you like to proceed with creating this investment cluster?`;
   }
 
   extractThemeFromChat(message) {
