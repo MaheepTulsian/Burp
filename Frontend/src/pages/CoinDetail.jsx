@@ -27,6 +27,7 @@ const ClusterDetail = () => {
         }
         const result = await response.json();
         if (result.success) {
+          console.log(result.data);
           setClusterData(result.data);
         } else {
           throw new Error(result.message || "Failed to load cluster data");
@@ -171,44 +172,16 @@ const ClusterDetail = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="grid md:grid-cols-4 gap-6 mb-8"
+          className="grid md:grid-cols-2 gap-6 mb-8"
         >
           <div className="card-gradient rounded-2xl p-6 shadow-sm">
             <h3 className="text-sm font-medium text-muted-foreground mb-2">
-              Total Value
+              Description
             </h3>
-            <p className="text-3xl font-bold text-foreground">
-              ${clusterData.totalValue?.toLocaleString() || "0"}
+            <p className="text-lg text-foreground leading-relaxed">
+              {clusterData.description ||
+                "This cluster provides diversified exposure to selected cryptocurrency tokens with strategic allocation weights."}
             </p>
-            <p
-              className={`text-sm mt-1 ${
-                calculateTotalReturn().startsWith("-")
-                  ? "text-red-600"
-                  : "text-green-600"
-              }`}
-            >
-              {calculateTotalReturn()}% Total Return
-            </p>
-          </div>
-
-          <div className="card-gradient rounded-2xl p-6 shadow-sm">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">
-              Total Investments
-            </h3>
-            <p className="text-2xl font-bold text-foreground">
-              {clusterData.popularity?.investments || 0}
-            </p>
-            <p className="text-sm mt-1 text-muted-foreground">Active investors</p>
-          </div>
-
-          <div className="card-gradient rounded-2xl p-6 shadow-sm">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">
-              Views
-            </h3>
-            <p className="text-2xl font-bold text-foreground">
-              {clusterData.popularity?.views || 0}
-            </p>
-            <p className="text-sm mt-1 text-muted-foreground">Total views</p>
           </div>
 
           <div className="card-gradient rounded-2xl p-6 text-center shadow-sm">
@@ -307,7 +280,7 @@ const ClusterDetail = () => {
                 Cancel
               </button>
               <p className="text-xs text-muted-foreground">
-                Purchases use PYUSD and the platform's DEX integration (1inch).
+                Currently we support PYUSD for purchase.
               </p>
             </div>
           </div>
