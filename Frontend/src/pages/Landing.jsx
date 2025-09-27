@@ -4,6 +4,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import HumanoidSection from '../components/do';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -65,7 +66,7 @@ const Landing = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             onClick={handleGetStarted}
-            className="btn-premium px-8 py-3 rounded-2xl font-semibold text-lg"
+            className="btn-premium px-8 py-3 rounded-2xl font-semibold text-lg border"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -81,7 +82,7 @@ const Landing = () => {
         animate="visible"
         className="relative z-10 px-6 py-24"
       >
-        <div className="max-w-7xl mx-auto text-center">
+        <div className="max-w-7xl mx-auto text-center h-screen">
           {/* Premium Badge */}
           <motion.div
             variants={itemVariants}
@@ -98,7 +99,7 @@ const Landing = () => {
           >
             Blockchain Unified
             <br />
-            <span className="bg-gradient-to-r from-gold to-gold-dark bg-clip-text text-transparent">Rebalancing Platform</span>
+            <span className="bg-gradient-to-r from-gold to-gold-dark bg-clip-text ">Rebalancing Platform</span>
           </motion.h1>
 
           {/* Subtitle */}
@@ -139,10 +140,10 @@ const Landing = () => {
           {/* Feature Grid */}
           <motion.div 
             variants={itemVariants}
-            className="grid md:grid-cols-3 gap-8 mt-32"
+            className="grid md:grid-cols-3 gap-8 mt-32 "
           >
             <motion.div 
-              className="premium-card rounded-3xl p-10 hover-lift group"
+              className="premium-card rounded-3xl p-10 hover-lift group border"
               whileHover={{ y: -8 }}
             >
               <div className="w-16 h-16 bg-gradient-to-br from-gold to-gold-dark rounded-2xl flex items-center justify-center mb-8 group-hover:animate-float">
@@ -157,7 +158,7 @@ const Landing = () => {
             </motion.div>
 
             <motion.div 
-              className="premium-card rounded-3xl p-10 hover-lift group"
+              className="premium-card rounded-3xl p-10 hover-lift group border"
               whileHover={{ y: -8 }}
             >
               <div className="w-16 h-16 bg-gradient-to-br from-gold to-gold-dark rounded-2xl flex items-center justify-center mb-8 group-hover:animate-float">
@@ -172,7 +173,7 @@ const Landing = () => {
             </motion.div>
 
             <motion.div 
-              className="premium-card rounded-3xl p-10 hover-lift group"
+              className="premium-card rounded-3xl p-10 hover-lift group border"
               whileHover={{ y: -8 }}
             >
               <div className="w-16 h-16 bg-gradient-to-br from-gold to-gold-dark rounded-2xl flex items-center justify-center mb-8 group-hover:animate-float">
@@ -188,7 +189,6 @@ const Landing = () => {
           </motion.div>
         </div>
       </motion.main>
-
       {/* Premium Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-60 -right-60 w-96 h-96 bg-gold opacity-10 rounded-full blur-3xl animate-pulse"></div>
