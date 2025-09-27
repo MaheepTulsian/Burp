@@ -18,7 +18,7 @@ const Dashboard = () => {
       try {
         setLoading(true);
 
-        const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+        const apiBase = 'http://82.177.167.168';
         const url = `${apiBase}/api/baskets/public/clusters?limit=20`;
 
         const resp = await fetch(url, {

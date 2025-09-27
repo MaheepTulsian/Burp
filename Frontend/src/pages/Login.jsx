@@ -113,6 +113,12 @@ const Login = ({ onLogin }) => {
 
       // Step 3: Send signature to backend
       console.log('🚀 Calling create-account endpoint...');
+      console.log('📤 Request payload:', {
+        walletAddress,
+        signature: signature?.substring(0, 10) + '...',
+        nonce: nonce?.substring(0, 10) + '...',
+        hasMessage: !!signMessage
+      });
       const authResponse = await fetch(
         `${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/auth/create-account`,
         {
@@ -122,6 +128,7 @@ const Login = ({ onLogin }) => {
             walletAddress,
             signature,
             nonce,
+            message: signMessage,
             userProfile: {
               // Optional profile data can be added here
             }
@@ -130,9 +137,11 @@ const Login = ({ onLogin }) => {
       );
 
       console.log('📡 Auth response status:', authResponse.status);
-      
+
       if (!authResponse.ok) {
-        throw new Error(`Authentication failed: ${authResponse.status}`);
+        const errorText = await authResponse.text();
+        console.error('❌ Auth response error:', errorText);
+        throw new Error(`Authentication failed: ${authResponse.status} - ${errorText}`);
       }
 
       const authData = await authResponse.json();

@@ -58,7 +58,7 @@ const Cluster = () => {
       // Test backend connectivity first
       try {
         console.log('🔍 Testing backend connectivity...');
-        const healthCheck = await fetch('http://localhost:5001/api/agents/status');
+        const healthCheck = await fetch('http://82.177.167.168/api/agents/status');
         console.log('✅ Backend connectivity:', healthCheck.status === 200 ? 'OK' : 'Failed');
 
         if (healthCheck.status === 200) {
@@ -72,7 +72,7 @@ const Cluster = () => {
       // Get initial message from Agent1
       try {
         console.log('🤖 Getting initial message from Agent1...');
-        const response = await fetch('http://localhost:5001/api/agents/chat/public', {
+        const response = await fetch('http://82.177.167.168/api/agents/chat/public', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -140,7 +140,7 @@ const Cluster = () => {
       console.log('🔑 Auth token exists:', !!authToken);
 
       // Try authenticated endpoint first
-      let apiUrl = 'http://localhost:5001/api/agents/chat';
+      let apiUrl = 'http://82.177.167.168/api/agents/chat';
       let headers = {
         'Content-Type': 'application/json'
       };
@@ -149,7 +149,7 @@ const Cluster = () => {
         headers['Authorization'] = `Bearer ${authToken}`;
       } else {
         // Use public endpoint if no auth token
-        apiUrl = 'http://localhost:5001/api/agents/chat/public';
+        apiUrl = 'http://82.177.167.168/api/agents/chat/public';
         console.log('🔓 Using public endpoint - no auth token found');
       }
 
@@ -401,7 +401,7 @@ const Cluster = () => {
 
       console.log('📤 Sending basket data to API:', basketData);
 
-      const response = await fetch('http://localhost:5001/api/baskets/ai-create', {
+      const response = await fetch('http://82.177.167.168/api/baskets/ai-create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
