@@ -28,12 +28,13 @@ const basketSchema = new mongoose.Schema({
     },
     address: {
       type: String,
-      required: true,
+      required: false,
       lowercase: true,
       trim: true,
       validate: {
         validator: function(v) {
-          return /^0x[a-fA-F0-9]{40}$/.test(v);
+          // Allow empty/null addresses or valid format
+          return !v || /^0x[a-fA-F0-9]{40}$/.test(v);
         },
         message: 'Invalid token address format'
       }
@@ -87,6 +88,29 @@ const basketSchema = new mongoose.Schema({
   aiGenerated: {
     type: Boolean,
     default: false
+  },
+  visibility: {
+    type: String,
+    enum: ['public', 'private'],
+    default: 'private'
+  },
+  featured: {
+    type: Boolean,
+    default: false
+  },
+  popularity: {
+    score: {
+      type: Number,
+      default: 0
+    },
+    views: {
+      type: Number,
+      default: 0
+    },
+    investments: {
+      type: Number,
+      default: 0
+    }
   },
   aiMetadata: {
     model: {
@@ -212,6 +236,9 @@ const basketSchema = new mongoose.Schema({
 basketSchema.index({ userId: 1, isActive: 1 });
 basketSchema.index({ category: 1, isActive: 1 });
 basketSchema.index({ createdBy: 1, isActive: 1 });
+basketSchema.index({ visibility: 1, isActive: 1 });
+basketSchema.index({ featured: -1, visibility: 1 });
+basketSchema.index({ 'popularity.score': -1, visibility: 1 });
 basketSchema.index({ 'aiMetadata.confidence': -1 });
 basketSchema.index({ createdAt: -1 });
 basketSchema.index({ totalValue: -1 });
@@ -243,6 +270,9 @@ basketSchema.methods.toPublicJSON = function() {
     isActive: this.isActive,
     createdBy: this.createdBy,
     aiGenerated: this.aiGenerated,
+    visibility: this.visibility,
+    featured: this.featured,
+    popularity: this.popularity,
     aiMetadata: this.aiMetadata,
     performance: this.performance,
     investmentCount: this.investments ? this.investments.length : 0,
@@ -282,6 +312,30 @@ basketSchema.statics.findByCategory = function(category, limit = 20) {
 
 basketSchema.statics.findUserBaskets = function(userId) {
   return this.find({ userId, isActive: true }).sort({ createdAt: -1 });
+};
+
+basketSchema.statics.findPublicBaskets = function(limit = 20) {
+  return this.find({ visibility: 'public', isActive: true })
+    .sort({ 'popularity.score': -1, createdAt: -1 })
+    .limit(limit);
+};
+
+basketSchema.statics.findFeaturedBaskets = function(limit = 10) {
+  return this.find({ featured: true, visibility: 'public', isActive: true })
+    .sort({ 'popularity.score': -1, createdAt: -1 })
+    .limit(limit);
+};
+
+basketSchema.methods.incrementViews = function() {
+  this.popularity.views += 1;
+  this.popularity.score = (this.popularity.views * 0.1) + (this.popularity.investments * 2);
+  return this.save();
+};
+
+basketSchema.methods.incrementInvestments = function() {
+  this.popularity.investments += 1;
+  this.popularity.score = (this.popularity.views * 0.1) + (this.popularity.investments * 2);
+  return this.save();
 };
 
 module.exports = mongoose.model('Basket', basketSchema);

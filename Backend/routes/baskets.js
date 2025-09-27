@@ -112,6 +112,40 @@ router.get('/popular', async (req, res) => {
   }
 });
 
+// Get public clusters for dashboard display
+router.get('/public/clusters', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 20;
+    const baskets = await Basket.findPublicBaskets(limit);
+
+    res.json({
+      success: true,
+      data: baskets.map(basket => basket.toPublicJSON()),
+      message: 'Public clusters retrieved successfully'
+    });
+
+  } catch (error) {
+    res.status(500).json(basketService.formatError(error, 500));
+  }
+});
+
+// Get featured clusters for homepage
+router.get('/public/featured', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 6;
+    const baskets = await Basket.findFeaturedBaskets(limit);
+
+    res.json({
+      success: true,
+      data: baskets.map(basket => basket.toPublicJSON()),
+      message: 'Featured clusters retrieved successfully'
+    });
+
+  } catch (error) {
+    res.status(500).json(basketService.formatError(error, 500));
+  }
+});
+
 router.get('/category/:category', async (req, res) => {
   try {
     const { category } = req.params;
@@ -131,6 +165,15 @@ router.get('/:basketId', async (req, res) => {
     const userId = req.query.userId;
 
     const result = await basketService.getBasketById(basketId, userId);
+
+    // Increment view count for public baskets
+    if (result.success && result.data.visibility === 'public') {
+      const basket = await Basket.findById(basketId);
+      if (basket) {
+        await basket.incrementViews();
+      }
+    }
+
     res.json(result);
 
   } catch (error) {
@@ -181,6 +224,14 @@ router.post('/:basketId/invest', authenticateToken, async (req, res) => {
       amount,
       transactionHash
     );
+
+    // Increment investment count for successful investments
+    if (result.success) {
+      const basket = await Basket.findById(basketId);
+      if (basket) {
+        await basket.incrementInvestments();
+      }
+    }
 
     res.json(result);
 

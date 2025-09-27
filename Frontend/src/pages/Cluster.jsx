@@ -307,6 +307,21 @@ const Cluster = () => {
         // Set cluster immediately for the ready state
         setCluster(newCluster);
 
+        // Save cluster to MongoDB
+        try {
+          const savedCluster = await saveClusterToDatabase(newCluster);
+          if (savedCluster) {
+            console.log('✅ Cluster saved to database:', savedCluster.id);
+            // Update cluster with database ID
+            newCluster.databaseId = savedCluster.id;
+            newCluster.basketSaved = true;
+            setCluster({...newCluster});
+          }
+        } catch (error) {
+          console.error('❌ Failed to save cluster to database:', error);
+          // Continue with the flow even if save fails
+        }
+
         // Add final message to chat showing cluster is ready
         const clusterReadyMsg = {
           id: chatMessages.length + 3,
@@ -356,14 +371,102 @@ const Cluster = () => {
     setShowSummary(true);
   };
 
+  // Save cluster to database
+  const saveClusterToDatabase = async (clusterData) => {
+    console.log('💾 Saving cluster to database:', clusterData.name);
+
+    const authToken = localStorage.getItem('burp_auth_token');
+
+    try {
+      // Prepare basket data for the API
+      const basketData = {
+        basketName: clusterData.name,
+        description: clusterData.description,
+        tokens: clusterData.tokens.map(token => ({
+          symbol: token.symbol,
+          name: token.name,
+          // No address needed for AI-generated clusters
+          weight: token.percentage,
+          rationale: token.rationale
+        })),
+        riskLevel: clusterData.riskLevel.toLowerCase(),
+        category: 'ai-generated',
+        metadata: {
+          aiGenerated: true,
+          userProfile: clusterData.userProfile,
+          expectedReturn: clusterData.expectedReturn,
+          minInvestment: clusterData.minInvestment
+        }
+      };
+
+      console.log('📤 Sending basket data to API:', basketData);
+
+      const response = await fetch('http://localhost:5001/api/baskets/ai-create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Bearer ${authToken}` })
+        },
+        body: JSON.stringify(basketData)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to save cluster: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('✅ Cluster saved successfully:', result.data);
+        return {
+          id: result.data.basketId || result.data.id,
+          ...result.data
+        };
+      } else {
+        throw new Error(result.message || 'Failed to save cluster');
+      }
+    } catch (error) {
+      console.error('❌ Error saving cluster to database:', error);
+      throw error;
+    }
+  };
+
   // Handle investment after treasure reveal
-  const handleInvestment = () => {
+  const handleInvestment = async () => {
     console.log('💰 Investment confirmed:', {
       clusterName: cluster?.name,
-      userProfile: userProfile?.collected_info
+      userProfile: userProfile?.collected_info,
+      basketSaved: cluster?.basketSaved,
+      databaseId: cluster?.databaseId
     });
+
+    // If cluster is not saved yet, save it now
+    if (!cluster?.basketSaved && cluster) {
+      try {
+        console.log('💾 Cluster not saved yet, saving now...');
+        const savedCluster = await saveClusterToDatabase(cluster);
+        if (savedCluster) {
+          console.log('✅ Cluster saved during investment:', savedCluster.id);
+          setCluster(prev => ({
+            ...prev,
+            databaseId: savedCluster.id,
+            basketSaved: true
+          }));
+        }
+      } catch (error) {
+        console.error('❌ Failed to save cluster during investment:', error);
+        // Continue with investment even if save fails
+      }
+    }
+
+    // For demo purposes, simulate investment without actual blockchain transaction
+    if (cluster?.databaseId) {
+      console.log('💰 Would create investment record for cluster ID:', cluster.databaseId);
+      // In production: await investInCluster(cluster.databaseId, investmentAmount);
+    }
+
     console.log('💰 Creating and investing in cluster:', cluster?.name);
-    // In a real app, this would trigger the cluster creation and investment transaction
     navigate('/dashboard');
   };
 

@@ -312,23 +312,34 @@ class AgentService extends BaseService {
 
   async processUserChat(chatMessage, conversationHistory = [], userContext = null) {
     try {
+      const chatMetrics = this.initializeChatMetrics(chatMessage, conversationHistory);
       console.log('\n🧠 [AgentService] Processing user chat');
       console.log('💬 [AgentService] Input message:', chatMessage?.slice(0, 200) + (chatMessage?.length > 200 ? '...' : ''));
+      console.log('📊 [AgentService] Chat metrics:', chatMetrics);
 
       if (!this.openaiApiKey) {
         console.warn('⚠️ [AgentService] OpenAI API key not configured, using fallback');
         return this.fallbackChatResponse(chatMessage, conversationHistory);
       }
 
+      const startTime = Date.now();
+
       // Use actual OpenAI to process the chat
       const response = await this.callAgent1(chatMessage, conversationHistory);
-      console.log('🤖 [AgentService] Agent1 response received');
+
+      const processingTime = Date.now() - startTime;
+      console.log('🤖 [AgentService] Agent1 response received in', processingTime + 'ms');
+
+      // Enhanced analytics
+      const responseMetrics = this.analyzeResponse(response, processingTime, chatMetrics);
+      console.log('📈 [AgentService] Response analytics:', responseMetrics);
 
       // Check if the response contains a complete profile JSON
       const profileMatch = this.extractProfileFromResponse(response);
 
       if (profileMatch) {
         console.log('🎯 [AgentService] Profile complete detected, generating portfolio');
+        this.logConversationCompletion(chatMetrics, responseMetrics);
 
         // Generate portfolio using the complete profile
         const portfolioResult = await this.generatePortfolio(profileMatch);
@@ -340,7 +351,13 @@ class AgentService extends BaseService {
             user_analysis: profileMatch,
             portfolio: portfolioResult.data,
             chat_response: finalResponse,
-            is_complete: true
+            is_complete: true,
+            conversation_metrics: {
+              ...chatMetrics,
+              ...responseMetrics,
+              completion_status: 'success',
+              total_processing_time: processingTime
+            }
           }, 'Profile complete and portfolio generated');
         }
       }
@@ -351,7 +368,13 @@ class AgentService extends BaseService {
         portfolio: null,
         chat_response: response,
         is_complete: false,
-        step: Math.floor(conversationHistory.length / 2) + 1
+        step: Math.floor(conversationHistory.length / 2) + 1,
+        conversation_metrics: {
+          ...chatMetrics,
+          ...responseMetrics,
+          completion_status: 'continuing',
+          processing_time: processingTime
+        }
       }, 'Conversation continuing');
 
     } catch (error) {
@@ -363,87 +386,190 @@ class AgentService extends BaseService {
     }
   }
 
+  initializeChatMetrics(message, history) {
+    return {
+      message_length: message?.length || 0,
+      conversation_turn: Math.floor(history.length / 2) + 1,
+      estimated_step: this.estimateConversationStep(history),
+      user_engagement_score: this.calculateEngagementScore(message),
+      conversation_quality: this.assessConversationQuality(history),
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  analyzeResponse(response, processingTime, inputMetrics) {
+    return {
+      response_length: response?.length || 0,
+      processing_time_ms: processingTime,
+      response_quality: this.assessResponseQuality(response),
+      contains_profile_completion: response?.includes('"status": "profile_complete"'),
+      estimated_completion_progress: this.estimateCompletionProgress(response, inputMetrics.estimated_step)
+    };
+  }
+
+  estimateConversationStep(history) {
+    const turns = Math.floor(history.length / 2);
+    if (turns === 0) return 1; // Introduction
+    if (turns <= 2) return 2; // Theme confirmation
+    if (turns <= 3) return 3; // Timeline
+    if (turns <= 4) return 4; // Preferences
+    return 5; // Summary
+  }
+
+  calculateEngagementScore(message) {
+    if (!message) return 0;
+
+    let score = 0;
+    const length = message.length;
+
+    // Length scoring
+    if (length > 100) score += 3;
+    else if (length > 50) score += 2;
+    else if (length > 20) score += 1;
+
+    // Content quality indicators
+    if (message.includes('interested') || message.includes('prefer')) score += 2;
+    if (message.includes('defi') || message.includes('bitcoin') || message.includes('ethereum')) score += 1;
+    if (message.includes('?')) score += 1; // User asking questions shows engagement
+
+    return Math.min(10, score);
+  }
+
+  assessConversationQuality(history) {
+    if (history.length === 0) return 'new';
+    if (history.length < 4) return 'early';
+    if (history.length < 8) return 'developing';
+    if (history.length < 12) return 'mature';
+    return 'extended';
+  }
+
+  assessResponseQuality(response) {
+    if (!response) return 'poor';
+
+    const length = response.length;
+    const hasStructure = response.includes('"status"') || response.includes('STEP');
+    const isInformative = length > 100 && length < 1000;
+
+    if (hasStructure && isInformative) return 'excellent';
+    if (isInformative) return 'good';
+    if (length > 50) return 'adequate';
+    return 'poor';
+  }
+
+  estimateCompletionProgress(response, currentStep) {
+    if (response?.includes('"status": "profile_complete"')) return 100;
+
+    const stepProgress = {
+      1: 20, // Introduction
+      2: 40, // Theme confirmation
+      3: 60, // Timeline
+      4: 80, // Preferences
+      5: 95  // Summary
+    };
+
+    return stepProgress[currentStep] || 0;
+  }
+
+  logConversationCompletion(chatMetrics, responseMetrics) {
+    console.log('✅ [AgentService] Conversation completed successfully');
+    console.log('📊 [AgentService] Final metrics:', {
+      total_turns: chatMetrics.conversation_turn,
+      conversation_quality: chatMetrics.conversation_quality,
+      user_engagement: chatMetrics.user_engagement_score,
+      processing_efficiency: responseMetrics.processing_time_ms < 3000 ? 'fast' : 'slow',
+      completion_path: 'standard_flow'
+    });
+  }
+
   async callAgent1(userMessage, conversationHistory) {
     const OpenAI = require('openai');
     const client = new OpenAI({ apiKey: this.openaiApiKey });
 
     const INVESTMENT_AGENT_SYSTEM_PROMPT = `
-You are Burp's User Analysis Agent - a crypto investment assistant that guides users through creating personalized investment portfolios. You must follow a structured conversation flow to collect specific information.
+You are Burp's Investment Strategist - an expert crypto analyst who builds personalized investment profiles through intelligent conversation. Your goal is to understand each user's unique investment DNA and translate it into actionable portfolio parameters.
 
-CORE MISSION: Guide users through 6 steps to build their crypto investment profile, then output a final JSON with their complete preferences.
+CORE OBJECTIVE: Extract precise investment preferences through strategic questioning, then output a complete investor profile for AI-driven portfolio construction.
 
-CONVERSATION FLOW (MUST FOLLOW IN ORDER):
+CONVERSATION ARCHITECTURE:
 
-STEP 1: CATEGORY INTRODUCTION
-- Briefly introduce 4-5 crypto categories:
-  • Stablecoins: Low volatility assets pegged to fiat (USDC, USDT)
-  • Utility Tokens: Access to specific services (Chainlink, Uniswap)
-  • Governance Tokens: Vote on protocols (AAVE, Compound)
-  • Platform Tokens: Support broader ecosystems (Ethereum, Polkadot)
-  • Others: Gaming, Data Storage (Filecoin), AI tokens, etc.
-- Ask: "Which coins or categories interest you for investment?"
+STEP 1: SECTOR INTELLIGENCE BRIEF
+Present crypto ecosystem with strategic context:
+- Infrastructure Layer: Bitcoin as digital gold, Ethereum as the smart contract foundation
+- DeFi Protocols: Uniswap, Aave, Compound driving financial innovation
+- Scaling Solutions: Polygon, Arbitrum, Optimism solving throughput challenges
+- Next-Generation Platforms: Solana, Avalanche competing for developer mindshare
+- Emerging Verticals: AI computation, gaming economies, real-world asset tokenization
 
-STEP 2: THEME CONFIRMATION
-- Confirm their category selection
-- Ask if they want to add/modify anything
-- Finalize their investment theme
+Ask with purpose: "Which of these crypto sectors aligns with your investment thesis?"
 
-STEP 3: TIMELINE
-- Ask: "How long—short-term, medium-term, or long-term?"
-- Accept ranges and approximations
-- Don't ask for clarification unless completely unclear
+STEP 2: STRATEGIC VALIDATION
+Reflect their choice with market intelligence. If they chose DeFi: "DeFi has shown resilience through multiple cycles and continues expanding total value locked. Are you drawn to the established protocols or interested in emerging DeFi innovations?"
+Confirm investment narrative and refine focus areas.
 
-STEP 4: SPECIFIC PREFERENCES
-- Ask: "Do you have any specific preferences? For example, avoiding speculative assets like meme coins, preferring established projects, or including staking options."
-- Accept any preferences they mention
+STEP 3: INVESTMENT HORIZON ANALYSIS
+Frame timeframes with market cycle context:
+- Tactical (6-18 months): Positioning for next market cycle, capturing momentum
+- Strategic (2-4 years): Protocol adoption cycles, ecosystem maturation
+- Generational (5+ years): Fundamental technology adoption, societal integration
 
-STEP 5: SUMMARY & CONFIRMATION
-- Present complete summary with deduced risk tolerance
-- Ask for confirmation or corrections
-- If corrections needed, address them and re-summarize
+Ask directly: "What investment timeframe matches your capital allocation strategy?"
 
-RISK FACTOR ASSESSMENT (0–10, DO THIS AUTOMATICALLY):
-Score risk based on user chat cues — no direct amount asked.
-- Tone: cautious = lower, neutral = flat, confident/speculative = higher
-- Assets: stablecoins/blue chips = lower, mix = mid, volatile/niche/meme = higher
-- Timeframe: long-term = lower, mid-term = mid, short-term/trading = higher
-- Diversification: broad spread = lower, concentrated/all-in = higher
-- Signals: mentions of safety/hedging = lower, hype/quick gains = higher
+STEP 4: PORTFOLIO PHILOSOPHY DEEP DIVE
+Probe investment approach with contextual questions:
+"Do you prefer concentrated positions in high-conviction assets, or diversified exposure across multiple opportunities? Are you interested in yield-generating assets through staking or liquidity provision? How do you view volatility - as risk to minimize or opportunity to capture?"
 
-CRITICAL RULES:
-1. NEVER skip steps or ask multiple questions at once
-2. ONLY move to next step after collecting current step's info
-3. Keep responses brief and focused (2-3 sentences max per response)
-4. Track conversation state internally - remember what's been collected
-5. Don't repeat information already gathered
-6. Be conversational but purposeful
+STEP 5: STRATEGIC PROFILE SYNTHESIS
+Present comprehensive analysis with calculated risk assessment:
+"Based on our discussion, I see you as a [X]/10 risk profile investor focused on [THEME] with [TIMEFRAME] horizon. Your approach suggests [SPECIFIC INSIGHTS]. This profiles translates to [PORTFOLIO APPROACH]. Does this capture your investment strategy accurately?"
 
-FINAL OUTPUT FORMAT (only provide when user confirms final summary):
+ADVANCED RISK CALIBRATION (0-10):
+Calculate sophisticated risk score using:
+- Language Analysis: Conservative terminology (preserve, stable, safe) versus growth language (opportunity, upside, aggressive)
+- Asset Class Preferences: Stablecoins/BTC (risk-reducer), ETH/major alts (balanced), emerging tokens (risk-amplifier)
+- Temporal Risk Factor: Long horizon (patience = lower risk), short horizon (timing pressure = higher risk)
+- Concentration Preference: Diversified approach (risk-managed) versus concentrated bets (risk-seeking)
+- Market Sophistication: Basic concepts (conservative) versus advanced strategies (risk-comfortable)
+
+COMMUNICATION EXCELLENCE:
+- Speak with authority but remain accessible
+- Provide context that educates while collecting data
+- Reference real market dynamics and protocol developments
+- Match user's sophistication level without talking down
+- Build logical flow between questions
+- Validate understanding before progression
+
+INPUT VALIDATION & RECOVERY:
+- Vague responses: "Help me understand what specifically interests you about [THEIR_MENTION]"
+- Off-topic: "That's valuable context. Let's capture how that influences your crypto investment approach"
+- Contradictory: "I want to ensure I understand correctly - you mentioned both [A] and [B]. Which better represents your core investment priority?"
+
+ENHANCED OUTPUT SCHEMA:
 {
   "status": "profile_complete",
   "collected_info": {
-    "investment_theme": "user's finalized theme",
-    "risk_tolerance": 5,
-    "time_horizon": "short_term/medium_term/long_term",
-    "preferred_sectors": ["array", "of", "sectors"],
-    "specific_preferences": ["array", "of", "preferences"]
+    "investment_theme": "precise thematic focus with nuance",
+    "risk_tolerance": 7,
+    "time_horizon": "strategic/tactical/generational",
+    "preferred_sectors": ["specific", "protocol", "categories"],
+    "specific_preferences": ["detailed", "investment", "criteria"],
+    "sophistication_level": "beginner/intermediate/advanced",
+    "volatility_tolerance": "low/moderate/high"
   },
-  "conversation_summary": "Brief summary of key decisions made"
+  "conversation_summary": "Strategic synthesis of investor profile and key decision drivers",
+  "risk_factors_analyzed": ["language_tone", "asset_preference", "time_pressure", "concentration_style"],
+  "confidence_assessment": 0.9
 }
 
-CONVERSATION STATE TRACKING:
-Internally track which step you're on:
-- Step 1: Introducing categories → asking for interests
-- Step 2: Confirming theme selection
-- Step 3: Collecting timeline
-- Step 4: Gathering specific preferences
-- Step 5: Summarizing and confirming
+OPERATIONAL DIRECTIVES:
+1. Maintain forward momentum - each response advances toward completion
+2. Extract maximum insight from minimal questions
+3. Demonstrate crypto market knowledge while staying focused
+4. Adapt sophistication level to user's demonstrated knowledge
+5. Validate critical assumptions before final synthesis
 
-TONE: Friendly, helpful, professional. Speak like a knowledgeable investment advisor who explains things simply.
+EXPERT POSITIONING: You combine deep crypto market knowledge with strategic portfolio thinking. Users should feel they're speaking with someone who understands both the technology and the investment landscape.
 
-REMEMBER: You're building towards creating AI-managed crypto portfolios on a decentralized platform. The data you collect will be used by AI agents to automatically manage their investments.
-
-Start the conversation by introducing yourself and beginning with Step 1.
+CONVERSATION INITIATION: Launch directly into Step 1 with an authoritative but welcoming sector overview.
 `;
 
     // Build messages array

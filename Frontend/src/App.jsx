@@ -96,7 +96,7 @@ const App = () => {
                 }
               />
               <Route
-                path="/coin/:id"
+                path="/clustor/:id"
                 element={
                   isAuthenticated ?
                   <CoinDetail /> :
