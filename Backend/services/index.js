@@ -1,19 +1,17 @@
 const BaseService = require('./BaseService');
-const UserService = require('./UserService');
-const PortfolioService = require('./PortfolioService');
-const TransactionService = require('./TransactionService');
-const StrategyService = require('./StrategyService');
-const AgentLogService = require('./AgentLogService');
-const InvestAIService = require('./InvestAIService');
 const AuthService = require('./AuthService');
+const AccountService = require('./AccountService');
+const BasketService = require('./BasketService');
+const ClusterPurchaseService = require('./ClusterPurchaseService');
+const ContractService = require('./ContractService');
+const PricingService = require('./PricingService');
 
 module.exports = {
   BaseService,
-  UserService,
-  PortfolioService,
-  TransactionService,
-  StrategyService,
-  AgentLogService,
-  InvestAIService,
-  AuthService
+  AuthService,
+  AccountService,
+  BasketService,
+  ClusterPurchaseService,
+  ContractService,
+  PricingService
 };

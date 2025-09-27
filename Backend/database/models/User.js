@@ -66,9 +66,21 @@ const userSchema = new mongoose.Schema({
       default: null
     }
   },
-  lastLogin: {
+  accountCreatedAt: {
     type: Date,
     default: Date.now
+  },
+  lastLoginAt: {
+    type: Date,
+    default: Date.now
+  },
+  lastUpdated: {
+    type: Date,
+    default: Date.now
+  },
+  deactivatedAt: {
+    type: Date,
+    default: null
   },
   isActive: {
     type: Boolean,
@@ -108,7 +120,9 @@ userSchema.methods.toPublicJSON = function() {
       verified: this.kycStatus.verified,
       verifiedAt: this.kycStatus.verifiedAt
     },
-    lastLogin: this.lastLogin,
+    accountCreatedAt: this.accountCreatedAt,
+    lastLoginAt: this.lastLoginAt,
+    isActive: this.isActive,
     createdAt: this.createdAt
   };
 };
