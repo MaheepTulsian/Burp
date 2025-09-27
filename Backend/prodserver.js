@@ -45,7 +45,7 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'", "'unsafe-inline'"],
-      connectSrc: ["'self'", "http://localhost:5001", "http://localhost:5001", "https://mainnet.infura.io", "https://api.1inch.dev", "https://burp-12e.pages.dev"],
+      connectSrc: ["'self'", "https://burp.contactsushil.me", "https://burp.contactsushil.me", "https://mainnet.infura.io", "https://api.1inch.dev", "https://burp-12e.pages.dev"],
       imgSrc: ["'self'", "data:", "https:"],
     },
   },
@@ -54,7 +54,7 @@ app.use(helmet({
 // CORS configuration - simplified for debugging
 app.use(cors({
   // include Vite dev origin (5173) and other local dev ports
-  origin: ['http://localhost:5001', 'https://burp-12e.pages.dev', 'http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:8080', 'http://localhost:8081', 'http://localhost:5001'],
+  origin: ['https://burp.contactsushil.me', 'https://burp-12e.pages.dev', 'http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:8080', 'http://localhost:8081', 'https://burp.contactsushil.me'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -231,7 +231,7 @@ const startServer = async () => {
 📍 Server: http://localhost:${PORT}
 🔗 Health: http://localhost:${PORT}/health
 📊 Status: http://localhost:${PORT}/api/status
-🌐 Production: http://localhost:5001 (via nginx)
+🌐 Production: https://burp.contactsushil.me (via nginx)
 
 🔗 Key Endpoints:
    • MetaMask Auth: POST /auth/create-account

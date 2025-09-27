@@ -20,7 +20,7 @@ const Dashboard = () => {
       try {
         setLoading(true);
 
-        const apiBase = 'http://localhost:5001';
+        const apiBase = 'https://burp.contactsushil.me';
         const url = `${apiBase}/api/baskets/public/clusters?limit=20`;
 
         const resp = await fetch(url, {

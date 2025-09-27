@@ -50,7 +50,7 @@ const KYCVerification = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5001/api/kyc/status/me', {
+      const response = await fetch('https://burp.contactsushil.me/api/kyc/status/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -105,7 +105,7 @@ const KYCVerification = () => {
 
     try {
       const token = localStorage.getItem('burp_auth_token');
-      const response = await fetch('http://localhost:5001/api/kyc/mock/verify', {
+      const response = await fetch('https://burp.contactsushil.me/api/kyc/mock/verify', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

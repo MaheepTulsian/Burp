@@ -42,7 +42,7 @@ const SimplifiedKYC = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5001/api/kyc/status/me', {
+      const response = await fetch('https://burp.contactsushil.me/api/kyc/status/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -73,7 +73,7 @@ const SimplifiedKYC = () => {
 
       // For simplicity, we'll use the mock verification endpoint
       // In production, this would integrate with actual Self protocol
-      const response = await fetch('http://localhost:5001/api/kyc/mock/verify', {
+      const response = await fetch('https://burp.contactsushil.me/api/kyc/mock/verify', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

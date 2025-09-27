@@ -47,7 +47,7 @@ MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/burp-prod
 npm start
 
 # Test health endpoint
-curl http://localhost:5001/health
+curl https://burp.contactsushil.me/health
 
 # Expected response:
 {
@@ -64,12 +64,12 @@ curl http://localhost:5001/health
 ### Testing Account Creation
 ```bash
 # Test nonce generation
-curl -X POST http://localhost:5001/auth/nonce \
+curl -X POST https://burp.contactsushil.me/auth/nonce \
   -H "Content-Type: application/json" \
   -d '{"walletAddress": "0x742d35Cc6634C0532925a3b8d6Ac6C3D0Ed8C32"}'
 
 # Test account creation (requires frontend MetaMask signature)
-curl -X POST http://localhost:5001/auth/create-account \
+curl -X POST https://burp.contactsushil.me/auth/create-account \
   -H "Content-Type: application/json" \
   -d '{
     "walletAddress": "0x742d35Cc6634C0532925a3b8d6Ac6C3D0Ed8C32",

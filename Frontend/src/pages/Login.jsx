@@ -73,7 +73,7 @@ const Login = ({ onLogin }) => {
       
       // Step 1: Get nonce from backend
       const nonceResponse = await fetch(
-        'http://localhost:5001/auth/nonce',
+        'https://burp.contactsushil.me/auth/nonce',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -120,7 +120,7 @@ const Login = ({ onLogin }) => {
         hasMessage: !!signMessage
       });
       const authResponse = await fetch(
-        'http://localhost:5001/auth/create-account',
+        'https://burp.contactsushil.me/auth/create-account',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

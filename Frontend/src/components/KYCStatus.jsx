@@ -31,7 +31,7 @@ const KYCStatus = ({ onStatusChange, showFullCard = true }) => {
       const token = localStorage.getItem('burp_auth_token');
       if (!token) return;
 
-      const response = await fetch('http://localhost:5001/api/kyc/status/me', {
+      const response = await fetch('https://burp.contactsushil.me/api/kyc/status/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
