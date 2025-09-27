@@ -20,10 +20,15 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         
-        // BURP Light Blue Theme
+        // BURP Premium Gold Theme
         'primary-light': "hsl(var(--primary-light))",
         'primary-medium': "hsl(var(--primary-medium))",
         'primary-dark': "hsl(var(--primary-dark))",
+        
+        // Premium Gradient Colors
+        'gold': "hsl(42, 100%, 50%)",
+        'gold-light': "hsl(48, 100%, 85%)",
+        'gold-dark': "hsl(38, 90%, 45%)",
         
         primary: {
           DEFAULT: "hsl(var(--primary))",

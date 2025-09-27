@@ -34,18 +34,19 @@ const TreasureReveal = ({ cluster, onComplete }) => {
     sequence();
   }, []);
 
-  // Generate particle positions for sparkle effect
+  // Generate premium particle positions for enhanced sparkle effect
   const generateParticles = (count) => {
     return Array.from({ length: count }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
-      delay: Math.random() * 2,
-      duration: 1 + Math.random() * 2
+      delay: Math.random() * 3,
+      duration: 2 + Math.random() * 3,
+      size: 2 + Math.random() * 4
     }));
   };
 
-  const particles = generateParticles(20);
+  const particles = generateParticles(30);
 
   // Section animation variants
   const sectionVariants = {
@@ -128,30 +129,39 @@ const TreasureReveal = ({ cluster, onComplete }) => {
 
   return (
     <div className="relative w-full max-w-4xl mx-auto">
-      {/* Particle Effects */}
+      {/* Premium Particle Effects */}
       {animationPhase !== 'initial' && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {particles.map((particle) => (
             <motion.div
               key={particle.id}
-              className="absolute w-2 h-2 bg-cta rounded-full"
+              className="absolute bg-gradient-to-r from-gold to-gold-light rounded-full shadow-lg"
               style={{
                 left: `${particle.x}%`,
                 top: `${particle.y}%`,
+                width: `${particle.size}px`,
+                height: `${particle.size}px`,
               }}
               animate={{
-                scale: [0, 1, 0],
-                opacity: [0, 1, 0],
-                rotate: [0, 360]
+                scale: [0, 1.2, 0.8, 0],
+                opacity: [0, 0.8, 0.6, 0],
+                rotate: [0, 720],
+                x: [0, Math.sin(particle.id) * 50, 0],
+                y: [0, Math.cos(particle.id) * 50, 0]
               }}
               transition={{
                 duration: particle.duration,
                 delay: particle.delay,
                 repeat: Infinity,
-                repeatDelay: 3
+                repeatDelay: 4,
+                ease: "easeInOut"
               }}
             />
           ))}
+          
+          {/* Premium Glow Effects */}
+          <div className="absolute inset-0 bg-gradient-radial from-gold/20 via-transparent to-transparent blur-xl"></div>
+          <div className="absolute inset-0 bg-gradient-conic from-gold-light/30 via-gold/20 to-gold-light/30 animate-spin" style={{animationDuration: '20s'}}></div>
         </div>
       )}
 
@@ -160,15 +170,30 @@ const TreasureReveal = ({ cluster, onComplete }) => {
         {animationPhase === 'initial' || animationPhase === 'opening' ? (
           /* Treasure Box Sections */
           <div className="relative w-80 h-80">
-            {/* Center glow effect */}
+            {/* Premium Center Glow Effect */}
             <motion.div
-              className="absolute inset-0 bg-cta rounded-full opacity-20 blur-3xl"
+              className="absolute inset-0 bg-gradient-radial from-gold to-gold-dark rounded-full opacity-30 blur-3xl"
               animate={{
-                scale: animationPhase === 'opening' ? [1, 1.5, 1] : 1,
-                opacity: animationPhase === 'opening' ? [0.2, 0.4, 0.2] : 0.2
+                scale: animationPhase === 'opening' ? [1, 2, 1.5, 1] : 1,
+                opacity: animationPhase === 'opening' ? [0.3, 0.7, 0.5, 0.3] : 0.3,
+                rotate: [0, 360]
               }}
               transition={{
-                duration: 2,
+                scale: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+                opacity: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+                rotate: { duration: 8, repeat: Infinity, ease: "linear" }
+              }}
+            />
+            
+            {/* Additional Premium Glow Layers */}
+            <motion.div
+              className="absolute inset-4 bg-gold-light rounded-full opacity-40 blur-2xl"
+              animate={{
+                scale: [0.8, 1.2, 0.8],
+                opacity: [0.4, 0.8, 0.4]
+              }}
+              transition={{
+                duration: 4,
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
@@ -185,12 +210,12 @@ const TreasureReveal = ({ cluster, onComplete }) => {
               return (
                 <motion.div
                   key={index}
-                  className="absolute w-20 h-20 bg-gradient-to-br from-primary-medium to-cta rounded-2xl border-4 border-primary-light shadow-lg"
+                  className="absolute w-24 h-24 bg-gradient-to-br from-gold-light via-gold to-gold-dark rounded-3xl border-4 border-gold shadow-2xl"
                   style={{
                     left: '50%',
                     top: '50%',
-                    marginLeft: '-40px',
-                    marginTop: '-40px',
+                    marginLeft: '-48px',
+                    marginTop: '-48px',
                     transformOrigin: 'center center'
                   }}
                   initial="closed"
@@ -198,21 +223,33 @@ const TreasureReveal = ({ cluster, onComplete }) => {
                   variants={sectionVariants}
                   custom={index}
                 >
-                  {/* Section content - small token icons */}
-                  <div className="w-full h-full flex items-center justify-center">
+                  {/* Premium Section Content */}
+                  <div className="w-full h-full flex items-center justify-center relative overflow-hidden">
+                    {/* Shimmer Effect */}
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                      animate={{
+                        x: ["-100%", "100%"]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                    
                     <motion.div
                       animate={{
                         rotate: [0, 360],
-                        scale: [1, 1.1, 1]
+                        scale: [1, 1.2, 1]
                       }}
                       transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "linear"
+                        rotate: { duration: 4, repeat: Infinity, ease: "linear" },
+                        scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
                       }}
-                      className="w-8 h-8 bg-primary-light rounded-full flex items-center justify-center"
+                      className="w-12 h-12 bg-gradient-to-br from-gold to-gold-dark rounded-2xl flex items-center justify-center shadow-lg border-2 border-gold-light z-10"
                     >
-                      <span className="text-primary-foreground font-bold text-xs">
+                      <span className="text-foreground font-bold text-sm">
                         {cluster.tokens[index]?.symbol.slice(0, 2) || '✨'}
                       </span>
                     </motion.div>
@@ -221,24 +258,55 @@ const TreasureReveal = ({ cluster, onComplete }) => {
               );
             })}
 
-            {/* Central core */}
+            {/* Premium Central Core */}
             <motion.div
-              className="absolute inset-1/2 w-16 h-16 -ml-8 -mt-8 bg-gradient-to-br from-cta to-primary-dark rounded-full shadow-xl border-4 border-primary-light"
+              className="absolute inset-1/2 w-20 h-20 -ml-10 -mt-10 bg-gradient-to-br from-gold via-gold-light to-gold-dark rounded-full shadow-2xl border-4 border-gold-light relative overflow-hidden"
               animate={{
-                scale: animationPhase === 'opening' ? [1, 1.3, 1] : 1,
+                scale: animationPhase === 'opening' ? [1, 1.4, 1.2, 1] : 1,
                 rotate: [0, 360],
                 boxShadow: animationPhase === 'opening' 
-                  ? ["0 0 0 rgba(59, 130, 246, 0.5)", "0 0 30px rgba(59, 130, 246, 0.8)", "0 0 0 rgba(59, 130, 246, 0.5)"]
-                  : "0 0 0 rgba(59, 130, 246, 0.5)"
+                  ? [
+                      "0 0 0 hsl(42, 100%, 50%, 0.5)", 
+                      "0 0 40px hsl(42, 100%, 50%, 0.9)", 
+                      "0 0 60px hsl(42, 100%, 50%, 0.7)",
+                      "0 0 20px hsl(42, 100%, 50%, 0.5)"
+                    ]
+                  : "0 0 20px hsl(42, 100%, 50%, 0.5)"
               }}
               transition={{
-                rotate: { duration: 8, repeat: Infinity, ease: "linear" },
-                scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-                boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                rotate: { duration: 6, repeat: Infinity, ease: "linear" },
+                scale: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+                boxShadow: { duration: 3, repeat: Infinity, ease: "easeInOut" }
               }}
             >
-              <div className="w-full h-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">B</span>
+              {/* Premium Core Shimmer */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent rounded-full"
+                animate={{
+                  x: ["-100%", "100%"]
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              
+              <div className="w-full h-full flex items-center justify-center relative z-10">
+                <motion.span 
+                  className="text-foreground font-bold text-2xl"
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    textShadow: ["0 0 0px hsl(42, 100%, 30%)", "0 0 10px hsl(42, 100%, 30%)", "0 0 0px hsl(42, 100%, 30%)"]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  B
+                </motion.span>
               </div>
             </motion.div>
           </div>

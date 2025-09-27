@@ -2,59 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
-/* BURP Design System - Light Blue Theme
+/* BURP Design System - Premium Gold & Light Yellow Theme
 All colors MUST be HSL for consistency */
 
 @layer base {
   :root {
-    /* Light Blue Theme Colors */
-    --background: 0 0% 100%;
-    --foreground: 220 20% 20%;
+    /* Premium Gold & Light Yellow Theme Colors */
+    --background: 45 100% 98%;
+    --foreground: 35 15% 15%;
     
-    /* Light Blue Primary Palette */
-    --primary-light: 210 100% 97%;
-    --primary: 210 100% 85%; 
-    --primary-medium: 210 100% 75%;
-    --primary-dark: 210 100% 65%;
-    --primary-foreground: 220 20% 20%;
+    /* Gold Primary Palette */
+    --primary-light: 48 100% 95%;
+    --primary: 45 100% 85%; 
+    --primary-medium: 42 95% 75%;
+    --primary-dark: 38 90% 65%;
+    --primary-foreground: 35 15% 15%;
     
-    /* CTA and Interactive Elements */
-    --cta: 210 85% 60%;
-    --cta-hover: 210 85% 55%;
-    --cta-foreground: 0 0% 100%;
+    /* CTA and Interactive Elements - Rich Gold */
+    --cta: 42 100% 50%;
+    --cta-hover: 38 100% 45%;
+    --cta-foreground: 35 15% 15%;
     
-    /* Card and Surface Colors */
-    --card: 0 0% 100%;
-    --card-foreground: 220 20% 20%;
-    --card-border: 210 30% 90%;
+    /* Card and Surface Colors with Gold Tints */
+    --card: 48 60% 98%;
+    --card-foreground: 35 15% 15%;
+    --card-border: 45 50% 88%;
     
-    /* Muted and Secondary */
-    --muted: 210 100% 95%;
-    --muted-foreground: 220 15% 50%;
-    --secondary: 210 100% 92%;
-    --secondary-foreground: 220 20% 20%;
+    /* Muted and Secondary with Light Yellow */
+    --muted: 48 80% 94%;
+    --muted-foreground: 35 15% 45%;
+    --secondary: 45 70% 90%;
+    --secondary-foreground: 35 15% 15%;
     
-    /* Accent Colors */
-    --accent: 210 100% 88%;
-    --accent-foreground: 220 20% 20%;
+    /* Accent Colors - Warm Gold */
+    --accent: 42 85% 85%;
+    --accent-foreground: 35 15% 15%;
     
     /* Utility Colors */
-    --border: 210 30% 88%;
-    --input: 210 30% 95%;
-    --ring: 210 85% 60%;
+    --border: 45 40% 85%;
+    --input: 48 50% 95%;
+    --ring: 42 100% 50%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(210, 100%, 95%), hsl(210, 100%, 85%));
-    --gradient-hero: linear-gradient(135deg, hsl(210, 100%, 97%) 0%, hsl(210, 100%, 88%) 50%, hsl(210, 85%, 75%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%) 0%, hsl(210, 100%, 98%) 100%);
+    /* Premium Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(48, 100%, 95%), hsl(42, 95%, 85%));
+    --gradient-hero: linear-gradient(135deg, hsl(48, 100%, 98%) 0%, hsl(45, 100%, 90%) 30%, hsl(42, 95%, 80%) 70%, hsl(38, 90%, 70%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(48, 80%, 98%) 0%, hsl(45, 70%, 95%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(42, 100%, 70%), hsl(38, 100%, 60%));
+    --gradient-premium: linear-gradient(135deg, hsl(48, 100%, 85%) 0%, hsl(42, 100%, 75%) 50%, hsl(38, 95%, 65%) 100%);
     
-    /* Shadows */
-    --shadow-sm: 0 2px 4px hsl(210, 85%, 60%, 0.08);
-    --shadow-md: 0 4px 12px hsl(210, 85%, 60%, 0.12);
-    --shadow-lg: 0 8px 24px hsl(210, 85%, 60%, 0.15);
-    --shadow-card: 0 4px 16px hsl(210, 85%, 60%, 0.08);
+    /* Premium Shadows with Gold Tints */
+    --shadow-sm: 0 2px 4px hsl(42, 50%, 50%, 0.12);
+    --shadow-md: 0 4px 12px hsl(42, 50%, 50%, 0.15);
+    --shadow-lg: 0 8px 24px hsl(42, 50%, 50%, 0.20);
+    --shadow-card: 0 4px 16px hsl(42, 50%, 50%, 0.12);
+    --shadow-premium: 0 8px 32px hsl(42, 100%, 50%, 0.25);
     
     /* Border Radius */
     --radius: 0.75rem;
@@ -77,17 +80,43 @@ All colors MUST be HSL for consistency */
 }
 
 @layer components {
-  /* Hero Styles */
+  /* Premium Hero Styles */
   .hero-gradient {
     background: var(--gradient-hero);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .hero-gradient::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+      hsl(48, 100%, 98%) 0%, 
+      hsl(45, 80%, 94%) 25%, 
+      hsl(42, 90%, 88%) 50%, 
+      hsl(38, 85%, 82%) 75%, 
+      hsl(35, 80%, 76%) 100%);
+    opacity: 0.8;
+    z-index: -1;
   }
   
   .card-gradient {
     background: var(--gradient-card);
     box-shadow: var(--shadow-card);
+    border: 1px solid hsl(var(--card-border));
   }
   
-  /* Animation Classes */
+  .premium-card {
+    background: var(--gradient-premium);
+    box-shadow: var(--shadow-premium);
+    border: 2px solid hsl(42, 100%, 70%);
+  }
+  
+  /* Premium Animation Classes */
   .animate-fade-in {
     animation: fadeIn 0.6s ease-out;
   }
@@ -100,38 +129,113 @@ All colors MUST be HSL for consistency */
     animation: scaleIn 0.4s ease-out;
   }
   
-  /* Treasure Box Animation */
-  .treasure-section {
-    transform-origin: center center;
-    transition: var(--transition-smooth);
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
   }
   
-  /* Interactive Elements */
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  
+  /* Premium Interactive Elements */
   .hover-lift {
     transition: var(--transition-smooth);
   }
   
   .hover-lift:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-premium);
   }
   
-  /* Cluster Card Styles */
-  .cluster-card {
-    background: var(--gradient-card);
-    border: 1px solid hsl(var(--card-border));
-    box-shadow: var(--shadow-card);
+  .hover-scale {
     transition: var(--transition-smooth);
   }
   
-  .cluster-card:hover {
-    transform: translateY(-2px);
+  .hover-scale:hover {
+    transform: scale(1.02);
     box-shadow: var(--shadow-lg);
+  }
+  
+  /* Premium Cluster Card Styles */
+  .cluster-card {
+    background: var(--gradient-card);
+    border: 2px solid hsl(var(--card-border));
+    box-shadow: var(--shadow-card);
+    transition: var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .cluster-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--gradient-gold);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+  
+  .cluster-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--shadow-premium);
+    border-color: hsl(42, 100%, 60%);
+  }
+  
+  .cluster-card:hover::before {
+    opacity: 0.1;
+  }
+  
+  /* Premium Button Styles */
+  .btn-premium {
+    background: var(--gradient-gold);
+    border: 2px solid hsl(42, 100%, 60%);
+    color: hsl(35, 15%, 15%);
+    font-weight: 600;
+    transition: var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-premium::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, hsl(48, 100%, 90%, 0.4), transparent);
+    transition: left 0.5s;
+  }
+  
+  .btn-premium:hover::before {
+    left: 100%;
+  }
+  
+  .btn-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-premium);
+    border-color: hsl(38, 100%, 50%);
+  }
+  
+  /* Chat Input Premium Styles */
+  .chat-input {
+    background: var(--gradient-card);
+    border: 2px solid hsl(var(--card-border));
+    transition: var(--transition-smooth);
+  }
+  
+  .chat-input:focus {
+    border-color: hsl(42, 100%, 60%);
+    box-shadow: 0 0 0 3px hsl(42, 100%, 50%, 0.1);
   }
 }
 
 @layer utilities {
-  /* Custom Keyframes */
+  /* Premium Custom Keyframes */
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -162,6 +266,42 @@ All colors MUST be HSL for consistency */
     to {
       opacity: 1;
       transform: scale(1);
+    }
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  @keyframes glow {
+    from {
+      box-shadow: 0 0 20px hsl(42, 100%, 50%, 0.3);
+    }
+    to {
+      box-shadow: 0 0 30px hsl(42, 100%, 50%, 0.6);
+    }
+  }
+  
+  @keyframes shimmer {
+    0% {
+      background-position: -200px 0;
+    }
+    100% {
+      background-position: calc(200px + 100%) 0;
+    }
+  }
+  
+  @keyframes pulse-gold {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
     }
   }
 }
