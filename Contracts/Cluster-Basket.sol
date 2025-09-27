@@ -51,7 +51,7 @@ contract ClusterBasket is Ownable, ReentrancyGuard {
         string memory basketId,
         address[] memory tokens,
         uint256[] memory weights,
-        bytes memory /*aiSignature*/
+        bytes memory /aiSignature/
     ) external onlyAI {
         require(baskets[basketId].createdAt == 0, "Basket exists");
         require(tokens.length == weights.length, "Length mismatch");
