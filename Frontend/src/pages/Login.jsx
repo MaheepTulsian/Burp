@@ -15,6 +15,8 @@ const Login = ({ onLogin }) => {
   const [connectedWallet, setConnectedWallet] = useState(null);
   const [authError, setAuthError] = useState('');
   const [hasTriggeredAuth, setHasTriggeredAuth] = useState(false);
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const { address, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
@@ -35,16 +37,41 @@ const Login = ({ onLogin }) => {
   // Auto-trigger RainbowKit authentication
   useEffect(() => {
     if (isConnected && address && !isConnecting && !hasTriggeredAuth) {
+      console.log('🔄 Wallet connected, starting authentication flow...');
       setHasTriggeredAuth(true);
-      handleWalletConnect();
+      // Add a small delay to ensure wallet is fully ready
+      setTimeout(() => {
+        handleWalletConnect();
+      }, 1000);
     }
   }, [isConnected, address, isConnecting, hasTriggeredAuth]);
+
+  // Handle wallet disconnection
+  useEffect(() => {
+    if (!isConnected && !address) {
+      // Wallet was disconnected externally
+      setConnectedWallet(null);
+      setHasTriggeredAuth(false);
+      setAuthError('');
+      setRetryCount(0);
+      console.log('🔌 Wallet disconnected externally');
+    }
+  }, [isConnected, address]);
+
+  // Reset retry count when wallet reconnects
+  useEffect(() => {
+    if (isConnected && address) {
+      setRetryCount(0);
+      setAuthError('');
+    }
+  }, [isConnected, address]);
 
   // Backend authentication flow
   const authenticateWithBackend = async (walletAddress) => {
     try {
       console.log('🔑 Starting authentication for:', walletAddress);
       
+      // Step 1: Get nonce from backend
       const nonceResponse = await fetch(
         `${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/auth/nonce`,
         {
@@ -54,17 +81,37 @@ const Login = ({ onLogin }) => {
         }
       );
 
+      if (!nonceResponse.ok) {
+        throw new Error(`Failed to get nonce: ${nonceResponse.status}`);
+      }
+
       const nonceData = await nonceResponse.json();
       console.log('🎲 Nonce response:', { success: nonceData.success, hasNonce: !!nonceData.data?.nonce });
       
-      if (!nonceData.success) throw new Error(nonceData.message);
+      if (!nonceData.success) {
+        throw new Error(nonceData.message || 'Failed to get nonce');
+      }
 
       const { nonce, signMessage } = nonceData.data;
       console.log('📝 Signing message...');
 
-      const signature = await signMessageAsync({ message: signMessage });
-      console.log('✍️ Message signed, signature length:', signature?.length);
+      // Step 2: Sign the message with wallet
+      let signature;
+      try {
+        signature = await signMessageAsync({ message: signMessage });
+        console.log('✍️ Message signed, signature length:', signature?.length);
+      } catch (signError) {
+        console.error('❌ Signature error:', signError);
+        if (signError.message.includes('User rejected')) {
+          throw new Error('User rejected the signature request');
+        } else if (signError.message.includes('not been authorized')) {
+          throw new Error('Wallet not authorized. Please reconnect your wallet.');
+        } else {
+          throw new Error(`Signature failed: ${signError.message}`);
+        }
+      }
 
+      // Step 3: Send signature to backend
       console.log('🚀 Calling create-account endpoint...');
       const authResponse = await fetch(
         `${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/auth/create-account`,
@@ -83,10 +130,17 @@ const Login = ({ onLogin }) => {
       );
 
       console.log('📡 Auth response status:', authResponse.status);
+      
+      if (!authResponse.ok) {
+        throw new Error(`Authentication failed: ${authResponse.status}`);
+      }
+
       const authData = await authResponse.json();
       console.log('📋 Auth response data:', { success: authData.success, hasUser: !!authData.data?.user, hasToken: !!authData.data?.token });
       
-      if (!authData.success) throw new Error(authData.message);
+      if (!authData.success) {
+        throw new Error(authData.message || 'Authentication failed');
+      }
 
       return authData.data;
     } catch (error) {
@@ -101,29 +155,59 @@ const Login = ({ onLogin }) => {
     setAuthError('');
 
     try {
-      if (isConnected && address) {
-        const authData = await authenticateWithBackend(address);
-
-        const walletData = {
-          address,
-          network: 'Ethereum',
-          walletType: 'RainbowKit',
-          user: authData.user,
-          token: authData.token,
-        };
-
-        setConnectedWallet(walletData);
-        localStorage.setItem('burp_auth_token', authData.token);
-        localStorage.setItem('burp_user_data', JSON.stringify(walletData));
-
-        console.log('✅ Authentication successful, redirecting to dashboard...');
-        onLogin(walletData);
-        navigate('/dashboard');
-      } else {
-        throw new Error('Please connect your wallet using RainbowKit.');
+      // Check if wallet is properly connected and authorized
+      if (!isConnected || !address) {
+        throw new Error('Wallet not connected. Please connect your wallet first.');
       }
+
+      console.log('🔑 Starting authentication for wallet:', address);
+      
+      // Ensure wallet is ready before proceeding
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const authData = await authenticateWithBackend(address);
+
+      const walletData = {
+        address,
+        network: 'Ethereum',
+        walletType: 'RainbowKit',
+        user: authData.user,
+        token: authData.token,
+      };
+
+      setConnectedWallet(walletData);
+      localStorage.setItem('burp_auth_token', authData.token);
+      localStorage.setItem('burp_user_data', JSON.stringify(walletData));
+
+      console.log('✅ Authentication successful, redirecting to dashboard...');
+      onLogin(walletData);
+      navigate('/dashboard');
     } catch (error) {
-      setAuthError(error.message || 'Authentication failed');
+      console.error('❌ Authentication error:', error);
+      
+      // Handle specific error types
+      if (error.message.includes('User rejected')) {
+        setAuthError('Transaction was rejected. Please try again.');
+      } else if (error.message.includes('not been authorized')) {
+        setAuthError('Wallet not authorized. Please reconnect your wallet.');
+      } else if (error.message.includes('Signature verification failed')) {
+        setAuthError('Signature verification failed. Please try again.');
+      } else {
+        setAuthError(error.message || 'Authentication failed. Please try again.');
+      }
+      
+      // Reset auth state on error
+      setHasTriggeredAuth(false);
+      
+      // Add retry mechanism for authorization errors
+      if (error.message.includes('not been authorized') && retryCount < 2) {
+        console.log(`🔄 Retrying authentication (attempt ${retryCount + 1}/3)...`);
+        setRetryCount(prev => prev + 1);
+        setTimeout(() => {
+          handleWalletConnect();
+        }, 2000);
+        return;
+      }
     } finally {
       setIsConnecting(false);
     }
@@ -134,10 +218,30 @@ const Login = ({ onLogin }) => {
   };
 
   const handleDisconnect = () => {
-    disconnect();
+    setShowDisconnectConfirm(true);
+  };
+
+  const confirmDisconnect = () => {
+    // Clear all local state
     setAuthError('');
     setConnectedWallet(null);
     setHasTriggeredAuth(false);
+    
+    // Clear localStorage
+    localStorage.removeItem('burp_auth_token');
+    localStorage.removeItem('burp_user_data');
+    
+    // Disconnect from wagmi
+    disconnect();
+    
+    // Close confirmation dialog
+    setShowDisconnectConfirm(false);
+    
+    console.log('🔌 Wallet disconnected and state cleared');
+  };
+
+  const cancelDisconnect = () => {
+    setShowDisconnectConfirm(false);
   };
 
   return (
@@ -186,11 +290,27 @@ const Login = ({ onLogin }) => {
             animate={{ opacity: 1, y: 0 }}
             className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl"
           >
-            <div className="flex items-center space-x-2">
-              <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-red-800 font-medium">{authError}</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-red-800 font-medium">{authError}</p>
+              </div>
+              {authError.includes('not been authorized') && (
+                <motion.button
+                  onClick={() => {
+                    setRetryCount(0);
+                    setAuthError('');
+                    handleWalletConnect();
+                  }}
+                  className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors duration-300"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Retry
+                </motion.button>
+              )}
             </div>
           </motion.div>
         )}
@@ -198,7 +318,7 @@ const Login = ({ onLogin }) => {
         {/* RainbowKit Connect Button */}
         <div className="mb-6">
           <ConnectButton.Custom>
-            {({ account, chain, openConnectModal, mounted }) => {
+            {({ account, chain, openConnectModal, openAccountModal, mounted }) => {
               const ready = mounted;
               const connected = ready && account && chain;
 
@@ -225,11 +345,26 @@ const Login = ({ onLogin }) => {
                   ) : (
                     <div className="w-full p-4 bg-green-50 border border-green-200 rounded-xl">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-green-600 font-medium">Connected</p>
-                          <p className="text-green-800 font-mono text-sm">{account.displayName}</p>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-sm text-green-600 font-medium">Connected</p>
+                            <p className="text-green-800 font-mono text-sm">{account.displayName}</p>
+                          </div>
                         </div>
                         <div className="flex gap-2">
+                          <motion.button
+                            onClick={openAccountModal}
+                            className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors duration-300"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            Account
+                          </motion.button>
                           <motion.button
                             onClick={handleDisconnect}
                             className="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors duration-300"
@@ -241,7 +376,7 @@ const Login = ({ onLogin }) => {
                           <motion.button
                             onClick={handleWalletConnect}
                             disabled={isConnecting}
-                            className="px-4 py-2 bg-cta text-white font-medium rounded-lg hover:bg-cta-hover transition-colors duration-300"
+                            className="px-4 py-2 bg-cta text-white font-medium rounded-lg hover:bg-cta-hover transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
@@ -300,6 +435,43 @@ const Login = ({ onLogin }) => {
             <p className="text-muted-foreground">Redirecting to dashboard...</p>
           </div>
         )}
+      </Modal>
+
+      {/* Disconnect Confirmation Modal */}
+      <Modal 
+        isOpen={showDisconnectConfirm} 
+        onClose={cancelDisconnect}
+        title="Disconnect Wallet"
+      >
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Disconnect Wallet?</h3>
+          <p className="text-muted-foreground mb-6">
+            Are you sure you want to disconnect your wallet? You'll need to reconnect to access your account.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <motion.button
+              onClick={cancelDisconnect}
+              className="px-6 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Cancel
+            </motion.button>
+            <motion.button
+              onClick={confirmDisconnect}
+              className="px-6 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Disconnect
+            </motion.button>
+          </div>
+        </div>
       </Modal>
 
       {/* Background decorative elements */}

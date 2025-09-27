@@ -22,7 +22,7 @@ const ClusterCard = ({ cluster, onClick }) => {
       whileHover={{ y: -8, scale: 1.02 }}
       whileTap={{ scale: 0.96 }}
       onClick={onClick}
-      className="cluster-card rounded-3xl p-8 cursor-pointer h-full min-h-[350px] flex flex-col relative group"
+      className="cluster-card border-2 border-gold-dark rounded-3xl p-8 cursor-pointer h-full min-h-[350px] flex flex-col relative group"
     >
       {/* Premium Circular Cluster Representation */}
       <div className="flex items-center justify-center mb-8">
