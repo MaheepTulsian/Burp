@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
 import * as Web3Icons from "@web3icons/react";
+import ScrollToTop from "../components/ScrollToTop";
 
 const API_BASE_URL = "https://burp.contactsushil.me";
 
@@ -49,6 +50,7 @@ const ClusterDetail = () => {
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading cluster data...</p>
+          <ScrollToTop/>
         </div>
       </div>
     );
