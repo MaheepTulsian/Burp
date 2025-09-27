@@ -88,7 +88,7 @@ const App = () => {
                 }
               />
               <Route
-                path="/cluster/:id"
+                path="/cluster/create"
                 element={
                   isAuthenticated ?
                   <Cluster /> :

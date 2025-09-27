@@ -126,9 +126,10 @@ const Dashboard = () => {
           ))}
 
           {/* Create Your Own Cluster Card */}
-          <motion.div variants={itemVariants}>
+          
+          <motion.div variants={itemVariants} onClick={() => navigate('/cluster/create')}>
             <div 
-              onClick={() => console.log('Create custom cluster - feature coming soon')}
+              onClick={() => navigate('/cluster/create')}
               className="cluster-card rounded-2xl p-8 h-full min-h-[300px] flex flex-col items-center justify-center text-center cursor-pointer border-2 border-dashed border-primary hover:border-cta transition-all duration-300"
             >
               <div className="w-20 h-20 bg-primary rounded-2xl flex items-center justify-center mb-6">

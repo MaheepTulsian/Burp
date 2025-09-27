@@ -1,60 +1,97 @@
-// Cluster detail page with chat interface and treasure reveal animation
+// Create cluster chat UI - Interactive chat to create a new investment cluster
 // Features smooth 6-7 second treasure box animation when user confirms investment
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useParams, useNavigate } from 'react-router-dom';
-import { mockApi } from '../mock/api';
+import { useNavigate } from 'react-router-dom';
 import Chat from '../components/Chat';
 import ClusterSummary from '../components/ClusterSummary';
 import TreasureReveal from '../components/TreasureReveal';
 
 const Cluster = () => {
-  const { id } = useParams();
   const navigate = useNavigate();
   
   const [cluster, setCluster] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [animationPhase, setAnimationPhase] = useState('initial'); // initial, treasure, summary
   const [showSummary, setShowSummary] = useState(false);
   const [chatComplete, setChatComplete] = useState(false);
 
-  // Load cluster data and chat messages
+  // Initialize chat with hardcoded data (will be replaced with API calls later)
   useEffect(() => {
-    const loadClusterData = async () => {
-      try {
-        setLoading(true);
-        const [clusterData, chatData] = await Promise.all([
-          mockApi.getCluster(id),
-          mockApi.getClusterChat(id)
-        ]);
-        
-        setCluster(clusterData);
-        setChatMessages(chatData);
-        
-        // Check if chat is complete (has final message)
-        const hasFinalMessage = chatData.some(msg => msg.isFinal);
-        setChatComplete(hasFinalMessage);
-        
-      } catch (error) {
-        console.error('Failed to load cluster data:', error);
-        navigate('/dashboard');
-      } finally {
-        setLoading(false);
+    // Hardcoded initial chat messages for cluster creation
+    const initialMessages = [
+      {
+        id: 1,
+        sender: 'ai',
+        message: "Hello! I'm your AI investment advisor. I'll help you create a personalized investment cluster. What's your risk tolerance?",
+        timestamp: new Date(Date.now() - 300000),
+        isSystem: true
+      },
+      {
+        id: 2,
+        sender: 'user',
+        message: "I'm looking for moderate risk investments",
+        timestamp: new Date(Date.now() - 240000)
+      },
+      {
+        id: 3,
+        sender: 'ai',
+        message: "Great! I'll create a balanced portfolio for you. What investment amount are you considering?",
+        timestamp: new Date(Date.now() - 180000),
+        isSystem: true
+      },
+      {
+        id: 4,
+        sender: 'user',
+        message: "$5000",
+        timestamp: new Date(Date.now() - 120000)
+      },
+      {
+        id: 5,
+        sender: 'ai',
+        message: "Perfect! Based on your preferences, I've created a diversified cluster with DeFi blue chips, Layer 2 tokens, and stable yields. Would you like to proceed with this investment cluster?",
+        timestamp: new Date(Date.now() - 60000),
+        isSystem: true,
+        isFinal: true
       }
+    ];
+
+    setChatMessages(initialMessages);
+    setChatComplete(true);
+    
+    // Set hardcoded cluster data that will be created at the end of chat
+    const newCluster = {
+      id: 'new-cluster-' + Date.now(),
+      name: 'AI Moderate Risk Cluster',
+      description: 'A balanced portfolio of DeFi and Layer 2 tokens with stable yields',
+      tokens: [
+        { symbol: 'ETH', percentage: 30, name: 'Ethereum' },
+        { symbol: 'MATIC', percentage: 25, name: 'Polygon' },
+        { symbol: 'AAVE', percentage: 20, name: 'Aave' },
+        { symbol: 'UNI', percentage: 15, name: 'Uniswap' },
+        { symbol: 'USDC', percentage: 10, name: 'USD Coin' }
+      ],
+      expectedReturn: '12-18%',
+      riskLevel: 'Moderate',
+      minInvestment: '$100',
+      totalValue: '$1.2M'
     };
 
-    if (id) {
-      loadClusterData();
-    }
-  }, [id, navigate]);
+    // Simulate cluster creation after chat completion
+    setTimeout(() => {
+      setCluster(newCluster);
+    }, 1000);
+    
+  }, []);
 
-  // Handle user decision (Yes/No)
+  // Handle user decision to create cluster (Yes/No)
   const handleUserDecision = (decision) => {
     if (decision === 'yes') {
+      // User wants to create the cluster, start treasure reveal animation
       setAnimationPhase('treasure');
     } else {
+      // User doesn't want to create cluster, go back to dashboard
       navigate('/dashboard');
     }
   };
@@ -66,37 +103,10 @@ const Cluster = () => {
 
   // Handle investment after treasure reveal
   const handleInvestment = () => {
-    console.log(`Investing in cluster: ${cluster?.name}`);
-    // In a real app, this would trigger the investment transaction
+    console.log(`Creating and investing in cluster: ${cluster?.name}`);
+    // In a real app, this would trigger the cluster creation and investment transaction
     navigate('/dashboard');
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading cluster analysis...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!cluster) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Cluster Not Found</h1>
-          <button 
-            onClick={() => navigate('/dashboard')}
-            className="px-6 py-3 bg-cta hover:bg-cta-hover text-cta-foreground rounded-xl font-medium transition-colors duration-300"
-          >
-            Back to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -116,8 +126,8 @@ const Cluster = () => {
               className="flex items-center justify-between mb-8"
             >
               <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">{cluster.name}</h1>
-                <p className="text-muted-foreground">{cluster.description}</p>
+                <h1 className="text-3xl font-bold text-foreground mb-2">Create Investment Cluster</h1>
+                <p className="text-muted-foreground">Chat with AI to build your personalized investment portfolio</p>
               </div>
               
               <button
@@ -136,7 +146,7 @@ const Cluster = () => {
               messages={chatMessages}
               onUserDecision={handleUserDecision}
               showDecision={chatComplete}
-              clusterName={cluster.name}
+              clusterName="Your AI Investment Cluster"
             />
           </motion.div>
         ) : animationPhase === 'treasure' && !showSummary ? (
