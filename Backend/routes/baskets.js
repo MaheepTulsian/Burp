@@ -270,6 +270,25 @@ router.post('/:basketId/purchase', authenticateToken, async (req, res) => {
       clusterTokens
     );
 
+    // If purchase recorded/queued successfully, record a transaction
+    try {
+      const Transaction = require('../database/models/Transaction');
+      if (purchaseResult && purchaseResult.success) {
+        await new Transaction({
+          userId: req.user.userId,
+          basketId: basketId,
+          type: 'purchase',
+          amount: pyusdAmount,
+          currency: 'PYUSD',
+          status: 'pending',
+          transactionHash: purchaseResult.data?.transactionHash || null,
+          meta: { purchaseResult }
+        }).save();
+      }
+    } catch (txErr) {
+      console.error('Failed to record transaction:', txErr.message);
+    }
+
     res.json(purchaseResult);
 
   } catch (error) {

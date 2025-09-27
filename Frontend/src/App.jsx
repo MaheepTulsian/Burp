@@ -15,6 +15,7 @@ import Dashboard from './pages/Dashboard';
 import Cluster from './pages/Cluster';
 import ClusterInfo from './pages/ClusterInfo';
 import CoinDetail from './pages/CoinDetail';
+import Transactions from './pages/Transactions';
 
 // Import components
 import Navbar from './components/Navbar';
@@ -108,6 +109,14 @@ const App = () => {
                 element={
                   isAuthenticated ?
                   <ClusterInfo /> :
+                  <Navigate to="/login" replace />
+                }
+              />
+              <Route
+                path="/transactions"
+                element={
+                  isAuthenticated ?
+                  <Transactions /> :
                   <Navigate to="/login" replace />
                 }
               />

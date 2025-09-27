@@ -11,6 +11,7 @@ const basketRouter = require('./routes/baskets');
 const pricingRouter = require('./routes/pricing');
 const blockchainRouter = require('./routes/blockchain');
 const agentsRouter = require('./routes/agents');
+const transactionsRouter = require('./routes/transactions');
 
 const User = require('./database/models/User');
 const Basket = require('./database/models/Basket');
@@ -96,6 +97,7 @@ app.use('/api/baskets', basketRouter);
 app.use('/api/pricing', pricingRouter);
 app.use('/api/blockchain', blockchainRouter);
 app.use('/api/agents', agentsRouter);
+app.use('/api/transactions', transactionsRouter);
 
 app.get('/health', (req, res) => {
   res.json({

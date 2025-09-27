@@ -48,11 +48,9 @@ const Navbar = ({ user, onLogout }) => {
             >
               Dashboard
             </button>
-            <button className="text-muted-foreground hover:text-foreground font-medium transition-colors duration-300">
-              Portfolio
-            </button>
-            <button className="text-muted-foreground hover:text-foreground font-medium transition-colors duration-300">
-              Analytics
+            <button  onClick={() => navigate('/cluster/create')}
+            className="text-muted-foreground hover:text-foreground font-medium transition-colors duration-300">
+              Create
             </button>
           </div>
 
@@ -100,10 +98,10 @@ const Navbar = ({ user, onLogout }) => {
                 </div>
                 
                 <div className="p-2">
-                  <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors duration-200">
-                    Account Settings
-                  </button>
-                  <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors duration-200">
+                  <button
+                    onClick={() => { setShowUserMenu(false); navigate('/transactions'); }}
+                    className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors duration-200"
+                  >
                     Transaction History
                   </button>
                   <button 

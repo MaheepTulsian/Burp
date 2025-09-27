@@ -180,10 +180,88 @@ const ClusterDetail = () => {
           </div>
 
           <div className="card-gradient rounded-2xl p-6 text-center">
-            <button className="w-full px-4 py-3 bg-cta hover:bg-cta-hover text-cta-foreground rounded-xl font-medium transition-colors duration-300 mb-2">
-              Invest in Cluster
-            </button>
-            <p className="text-xs text-muted-foreground">Via 1inch DEX</p>
+                    {/* Purchase UI: amount in PYUSD and buy button */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={clusterData._purchaseAmount || ''}
+                          onChange={(e) => setClusterData(prev => ({ ...prev, _purchaseAmount: e.target.value }))}
+                          placeholder="Amount (PYUSD)"
+                          className="w-full px-3 py-2 bg-muted rounded-lg border border-transparent focus:border-primary outline-none"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={async () => {
+                            const amount = Number(clusterData._purchaseAmount);
+                            if (!amount || amount <= 0) {
+                              alert('Please enter a valid PYUSD amount greater than 0');
+                              return;
+                            }
+
+                            const confirmed = window.confirm(`Confirm purchase of ${amount} PYUSD for cluster \"${clusterData.name}\"?`);
+                            if (!confirmed) return;
+
+                            try {
+                              // show simple loading UI by temporarily mutating clusterData
+                              setClusterData(prev => ({ ...prev, _isPurchasing: true }));
+
+                              const token = localStorage.getItem('burp_auth_token');
+                              const resp = await fetch(`${API_BASE_URL}/api/baskets/${id}/purchase`, {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  ...(token ? { Authorization: `Bearer ${token}` } : {})
+                                },
+                                body: JSON.stringify({ pyusdAmount: amount })
+                              });
+
+                              const payload = await resp.json().catch(() => null);
+
+                              if (!resp.ok) {
+                                const msg = (payload && payload.message) || `Purchase failed: ${resp.status}`;
+                                throw new Error(msg);
+                              }
+
+                              if (payload && payload.success) {
+                                // Update UI: bump investments count and totalValue (optimistic)
+                                setClusterData(prev => ({
+                                  ...prev,
+                                  popularity: { ...(prev.popularity || {}), investments: (prev.popularity?.investments || 0) + 1 },
+                                  totalValue: typeof prev.totalValue === 'number' ? prev.totalValue + amount : prev.totalValue,
+                                  _purchaseAmount: ''
+                                }));
+
+                                alert('Purchase queued successfully. Check transactions for status.');
+                              } else {
+                                throw new Error((payload && payload.message) || 'Purchase failed');
+                              }
+                            } catch (err) {
+                              console.error('Purchase error:', err);
+                              alert(err.message || 'Purchase failed');
+                            } finally {
+                              setClusterData(prev => ({ ...prev, _isPurchasing: false }));
+                            }
+                          }}
+                          className="w-full px-4 py-3 bg-cta hover:bg-cta-hover text-cta-foreground rounded-xl font-medium transition-colors duration-300 mb-2"
+                        >
+                          {clusterData._isPurchasing ? 'Processing...' : 'Buy with PYUSD'}
+                        </button>
+
+                        <button
+                          onClick={() => navigate('/dashboard')}
+                          className="px-4 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground">Purchases use PYUSD and the platform's DEX integration (1inch).</p>
+                    </div>
           </div>
         </motion.div>
 
