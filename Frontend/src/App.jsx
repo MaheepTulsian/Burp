@@ -16,6 +16,9 @@ import Cluster from './pages/Cluster';
 import ClusterInfo from './pages/ClusterInfo';
 import CoinDetail from './pages/CoinDetail';
 import Transactions from './pages/Transactions';
+import KYCVerification from './pages/KYCVerification';
+import QRKYCVerification from './pages/QRKYCVerification';
+import SimplifiedKYC from './pages/SimplifiedKYC';
 
 // Import components
 import Navbar from './components/Navbar';
@@ -117,6 +120,30 @@ const App = () => {
                 element={
                   isAuthenticated ?
                   <Transactions /> :
+                  <Navigate to="/login" replace />
+                }
+              />
+              <Route
+                path="/kyc/verify"
+                element={
+                  isAuthenticated ?
+                  <SimplifiedKYC /> :
+                  <Navigate to="/login" replace />
+                }
+              />
+              <Route
+                path="/kyc/verify-qr"
+                element={
+                  isAuthenticated ?
+                  <QRKYCVerification /> :
+                  <Navigate to="/login" replace />
+                }
+              />
+              <Route
+                path="/kyc/verify-manual"
+                element={
+                  isAuthenticated ?
+                  <KYCVerification /> :
                   <Navigate to="/login" replace />
                 }
               />

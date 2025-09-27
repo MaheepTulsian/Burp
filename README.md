@@ -2,7 +2,7 @@
 
 ## 🏆 ETHGlobal New Delhi 2025 - Best Use of Fluence Virtual Servers Submission
 
-**Live Deployment**: https://burp.contactsushil.me
+**Live Deployment**: http://localhost:5001
 **Fluence VM Deployment**: CPU-optimized AI agents running on Fluence Virtual Servers
 **Project Repository**: Private (Collaborator: @justprosh added)
 
@@ -69,7 +69,7 @@ Create `.env` file in Backend directory:
 # Server Configuration
 PORT=5001
 NODE_ENV=production
-CORS_ORIGIN=["https://burp.contactsushil.me"]
+CORS_ORIGIN=["http://localhost:5001"]
 
 # Database (MongoDB Atlas)
 MONGODB_URI=mongodb+srv://your-credentials@cluster.mongodb.net/burp
@@ -204,12 +204,12 @@ AI Response: {
 #### Authentication
 ```bash
 # Get nonce for wallet signature
-curl -X POST https://burp.contactsushil.me/auth/nonce \
+curl -X POST http://localhost:5001/auth/nonce \
   -H "Content-Type: application/json" \
   -d '{"walletAddress": "0x742d35Cc6634C0532925a3b8d6Ac6C3D0Ed8C32"}'
 
 # Create account with signature
-curl -X POST https://burp.contactsushil.me/auth/create-account \
+curl -X POST http://localhost:5001/auth/create-account \
   -H "Content-Type: application/json" \
   -d '{
     "walletAddress": "0x742d35Cc6634C0532925a3b8d6Ac6C3D0Ed8C32",
@@ -222,7 +222,7 @@ curl -X POST https://burp.contactsushil.me/auth/create-account \
 #### AI Portfolio Generation
 ```bash
 # Generate quick portfolio
-curl -X POST https://burp.contactsushil.me/api/agents/quick-portfolio \
+curl -X POST http://localhost:5001/api/agents/quick-portfolio \
   -H "Authorization: Bearer your-jwt-token" \
   -H "Content-Type: application/json" \
   -d '{
@@ -236,7 +236,7 @@ curl -X POST https://burp.contactsushil.me/api/agents/quick-portfolio \
 #### 1inch Integration
 ```bash
 # Get swap quote
-curl -X POST https://burp.contactsushil.me/api/blockchain/1inch/quote \
+curl -X POST http://localhost:5001/api/blockchain/1inch/quote \
   -H "Authorization: Bearer your-jwt-token" \
   -H "Content-Type: application/json" \
   -d '{
@@ -297,7 +297,7 @@ Network: ~15% (API traffic)
 ## 🌐 Deployment & Access
 
 ### Public Endpoint
-**URL**: https://burp.contactsushil.me
+**URL**: http://localhost:5001
 **Status**: ✅ Live and Operational
 **Fluence VM ID**: `fluence-vm-burp-prod-001`
 
@@ -506,7 +506,7 @@ BURP/
 - **Examples**: API usage, frontend interactions, and screenshots
 
 ### ✅ Deployment & Access
-- **Public Endpoint**: https://burp.contactsushil.me (Live and accessible)
+- **Public Endpoint**: http://localhost:5001 (Live and accessible)
 - **Fluence VM ID**: `fluence-vm-burp-prod-001`
 - **Terraform Script**: Complete infrastructure as code
 - **Usage Instructions**: Comprehensive user guide with examples
@@ -543,9 +543,9 @@ BURP/
 ## 🔗 Links and Resources
 
 ### Project Links
-- **Live Application**: https://burp.contactsushil.me
+- **Live Application**: http://localhost:5001
 - **GitHub Repository**: [Private - Collaborator access granted]
-- **API Documentation**: https://burp.contactsushil.me/api-docs
+- **API Documentation**: http://localhost:5001/api-docs
 
 ### Fluence Resources
 - **Fluence Documentation**: https://fluence.dev/docs/build/overview
@@ -568,7 +568,7 @@ BURP/
 **Category**: Best Use of Fluence Virtual Servers
 
 **Contact Information**:
-- **Website**: https://burp.contactsushil.me
+- **Website**: http://localhost:5001
 - **Email**: contact@burp.dev
 - **GitHub**: @sushilpandey
 - **Twitter**: @BURPCrypto

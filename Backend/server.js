@@ -12,6 +12,7 @@ const pricingRouter = require('./routes/pricing');
 const blockchainRouter = require('./routes/blockchain');
 const agentsRouter = require('./routes/agents');
 const transactionsRouter = require('./routes/transactions');
+const kycRouter = require('./routes/kyc');
 
 const User = require('./database/models/User');
 const Basket = require('./database/models/Basket');
@@ -98,6 +99,7 @@ app.use('/api/pricing', pricingRouter);
 app.use('/api/blockchain', blockchainRouter);
 app.use('/api/agents', agentsRouter);
 app.use('/api/transactions', transactionsRouter);
+app.use('/api/kyc', kycRouter);
 
 app.get('/health', (req, res) => {
   res.json({
@@ -138,7 +140,8 @@ app.get('/api/status', (req, res) => {
         pyusd: process.env.PYUSD_CONTRACT_ADDRESS ? 'configured' : 'not configured',
         oneinch: process.env.ONEINCH_API_URL ? 'configured' : 'not configured',
         pyth: process.env.PYTH_NETWORK_URL ? 'configured' : 'not configured',
-        selfProtocol: process.env.SELF_PROTOCOL_API_KEY ? 'configured' : 'not configured'
+        selfProtocol: process.env.SELF_PROTOCOL_API_KEY ? 'configured' : 'not configured',
+        ageVerifier: process.env.AGE_VERIFIER_CONTRACT_ADDRESS ? 'deployed' : 'not deployed'
       },
       features: {
         metaMaskAuth: true,
@@ -146,6 +149,7 @@ app.get('/api/status', (req, res) => {
         aiBaskets: true,
         priceFeeds: true,
         dexAggregation: true,
+        kycVerification: true,
         contractInteraction: false // Disabled for API-only mode
       }
     },
@@ -193,7 +197,22 @@ app.use((req, res) => {
       'GET /api/blockchain/status',
       'POST /api/blockchain/1inch/quote',
       'POST /api/blockchain/1inch/swap',
-      'GET /api/blockchain/contracts/info'
+      'GET /api/blockchain/contracts/info',
+
+      '# KYC Age Verification',
+      'GET /api/kyc/status',
+      'GET /api/kyc/requirements',
+      'POST /api/kyc/verify',
+      'GET /api/kyc/status/me',
+      'GET /api/kyc/eligibility/investment',
+      'POST /api/kyc/mock/verify',
+
+      '# QR-Based Age Verification',
+      'POST /api/kyc/generate-qr',
+      'GET /api/kyc/qr-status/:sessionId',
+      'POST /api/kyc/qr-callback',
+      'POST /api/kyc/qr-scan',
+      'GET /api/kyc/qr-stats'
     ]
   });
 });

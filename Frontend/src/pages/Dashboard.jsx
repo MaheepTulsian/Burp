@@ -6,11 +6,13 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 // Use real backend API for clusters
 import ClusterCard from '../components/ClusterCard';
+import KYCStatus from '../components/KYCStatus';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [clusters, setClusters] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [kycStatus, setKycStatus] = useState(null);
 
   // Load clusters on component mount (from backend)
   useEffect(() => {
@@ -18,7 +20,7 @@ const Dashboard = () => {
       try {
         setLoading(true);
 
-        const apiBase = 'https://burp.contactsushil.me';
+        const apiBase = 'http://localhost:5001';
         const url = `${apiBase}/api/baskets/public/clusters?limit=20`;
 
         const resp = await fetch(url, {
@@ -63,8 +65,20 @@ const Dashboard = () => {
 
   // Handle cluster selection
   const handleClusterClick = (clusterId) => {
+    // Check KYC status before allowing investment access
+    if (!kycStatus?.verified) {
+      // Redirect to KYC verification if not verified
+      navigate('/kyc/verify');
+      return;
+    }
+
     // Navigate to the detailed cluster view route (note: path uses 'clustor' to match App.jsx)
     navigate(`/clustor/${clusterId}`);
+  };
+
+  // Handle KYC status change
+  const handleKYCStatusChange = (status) => {
+    setKycStatus(status);
   };
 
   // Animation variants
@@ -115,7 +129,15 @@ const Dashboard = () => {
           </p>
         </motion.div>
 
-        
+        {/* KYC Status Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mb-8"
+        >
+          <KYCStatus onStatusChange={handleKYCStatusChange} />
+        </motion.div>
 
         {/* Clusters Grid */}
         <motion.div

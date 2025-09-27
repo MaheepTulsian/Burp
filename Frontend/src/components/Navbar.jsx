@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
+import KYCStatus from './KYCStatus';
 
 const Navbar = ({ user, onLogout }) => {
   const navigate = useNavigate();
@@ -52,6 +53,11 @@ const Navbar = ({ user, onLogout }) => {
             className="text-muted-foreground hover:text-foreground font-medium transition-colors duration-300">
               Create
             </button>
+
+            {/* KYC Status in Navigation */}
+            <div className="flex items-center">
+              <KYCStatus showFullCard={false} />
+            </div>
           </div>
 
           {/* User Menu */}
@@ -99,12 +105,18 @@ const Navbar = ({ user, onLogout }) => {
                 
                 <div className="p-2">
                   <button
+                    onClick={() => { setShowUserMenu(false); navigate('/kyc/verify'); }}
+                    className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors duration-200"
+                  >
+                    Age Verification
+                  </button>
+                  <button
                     onClick={() => { setShowUserMenu(false); navigate('/transactions'); }}
                     className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors duration-200"
                   >
                     Transaction History
                   </button>
-                  <button 
+                  <button
                     onClick={handleLogout}
                     className="w-full text-left px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
                   >
