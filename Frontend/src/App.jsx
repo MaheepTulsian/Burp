@@ -19,6 +19,7 @@ import Transactions from './pages/Transactions';
 import KYCVerification from './pages/KYCVerification';
 import QRKYCVerification from './pages/QRKYCVerification';
 import SimplifiedKYC from './pages/SimplifiedKYC';
+import ScrollToTop from './components/ScrollToTop';
 
 // Import components
 import Navbar from './components/Navbar';
@@ -58,6 +59,7 @@ const App = () => {
   return (
     <WalletConnectProvider>
       <Router>
+        <ScrollToTop /> 
         <div className="min-h-screen bg-background">
           {/* Navigation - only show on authenticated pages */}
           {isAuthenticated && (
