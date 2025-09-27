@@ -224,34 +224,14 @@ const startServer = async () => {
   try {
     await connectDatabase();
 
-    if (HTTPS_OPTIONS.key && HTTPS_OPTIONS.cert) {
-      // Start HTTPS server if certificates exist
-      https.createServer(HTTPS_OPTIONS, app).listen(443, () => {
-        console.log(`🚀 BURP Backend HTTPS Server Started!
-
-📍 Server: https://localhost
-🔗 Health: https://localhost/health
-📊 Status: https://localhost/api/status
-
-🔗 Key Endpoints:
-   • MetaMask Auth: POST /auth/create-account
-   • AI Baskets: GET /api/baskets/popular
-   • Token Prices: GET /api/pricing/token/:symbol
-   • 1inch Integration: POST /api/blockchain/1inch/quote
-
-🔧 Environment: ${process.env.NODE_ENV || 'development'}
-💾 Database: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}
-
-Ready for MetaMask wallet authentication! 🦊`);
-      });
-    } else {
-      // Fallback to HTTP if no certs
-      app.listen(PORT, () => {
-        console.log(`🚀 BURP Backend HTTP Server Started!
+    // Always run on PORT (5001) - nginx handles HTTPS
+    app.listen(PORT, () => {
+      console.log(`🚀 BURP Backend Server Started!
 
 📍 Server: http://localhost:${PORT}
 🔗 Health: http://localhost:${PORT}/health
 📊 Status: http://localhost:${PORT}/api/status
+🌐 Production: https://burp.contactsushil.me (via nginx)
 
 🔗 Key Endpoints:
    • MetaMask Auth: POST /auth/create-account
@@ -261,10 +241,10 @@ Ready for MetaMask wallet authentication! 🦊`);
 
 🔧 Environment: ${process.env.NODE_ENV || 'development'}
 💾 Database: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}
+🔒 HTTPS: Handled by nginx reverse proxy
 
 Ready for MetaMask wallet authentication! 🦊`);
-      });
-    }
+    });
 
   } catch (error) {
     console.error('❌ Failed to start server:', error);
