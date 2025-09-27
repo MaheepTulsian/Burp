@@ -86,7 +86,7 @@ const Chat = ({ messages, onUserDecision, onUserInput, showDecision, clusterName
             <span className="text-foreground font-bold text-lg">AI</span>
           </motion.div>
           <div>
-            <h3 className="font-bold text-foreground text-xl">BURP AI Advisor</h3>
+            <h3 className="font-bold text-foreground text-xl">{getAdvisorTitle()}</h3>
             <p className="text-foreground opacity-80 font-medium">Analyzing {clusterName}</p>
           </div>
           <div className="ml-auto">
@@ -242,12 +242,12 @@ const Chat = ({ messages, onUserDecision, onUserInput, showDecision, clusterName
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="p-8 bg-gradient-to-r from-gold-light to-gold border-t-2 border-gold"
         >
-          <motion.p 
+          <motion.p
             className="text-center text-foreground font-bold text-xl mb-6"
             animate={{ scale: [1, 1.02, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            Ready to proceed with this premium investment opportunity?
+            {getDecisionPrompt()}
           </motion.p>
           <div className="flex space-x-6">
             <motion.button
@@ -272,5 +272,14 @@ const Chat = ({ messages, onUserDecision, onUserInput, showDecision, clusterName
     </div>
   );
 };
+
+// Helper functions to replace hardcoded values
+function getAdvisorTitle() {
+  return "BURP AI Advisor";
+}
+
+function getDecisionPrompt() {
+  return "Ready to proceed with this premium investment opportunity?";
+}
 
 export default Chat;

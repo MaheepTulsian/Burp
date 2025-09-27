@@ -293,70 +293,222 @@ class AgentService extends BaseService {
 
   async processUserChat(chatMessage, conversationHistory = []) {
     try {
-      // Simulate the Agent1 conversation flow
-      const conversationLength = conversationHistory.length;
-      
-      // Extract user preferences from the current message and conversation
-      const userPreferences = {
-        theme: this.extractThemeFromChat(chatMessage),
-        timeHorizon: this.extractTimeHorizonFromChat(chatMessage),
-        riskLevel: this.extractRiskFromChat(chatMessage),
-        preferences: this.extractPreferencesFromChat(chatMessage)
-      };
+      console.log('\n🧠 [AgentService] Processing user chat');
+      console.log('💬 [AgentService] Input message:', chatMessage?.slice(0, 200) + (chatMessage?.length > 200 ? '...' : ''));
 
-      // Determine conversation step based on history length
-      let nextMessage = '';
-      let isComplete = false;
-      
-      if (conversationLength <= 2) {
-        // Step 2: Theme confirmation
-        nextMessage = `Great choice! I see you're interested in ${userPreferences.theme}. Would you like to add any specific preferences or modify anything about this theme?`;
-      } else if (conversationLength <= 4) {
-        // Step 3: Timeline
-        nextMessage = "Perfect! Now, what's your investment timeline - are you thinking short-term (months), medium-term (1-2 years), or long-term (3+ years)?";
-      } else if (conversationLength <= 6) {
-        // Step 4: Specific preferences
-        nextMessage = "Excellent! Do you have any specific preferences? For example, avoiding speculative assets like meme coins, preferring established projects, or including staking options?";
-      } else {
-        // Step 5: Generate final portfolio
-        isComplete = true;
-        
-        // Create complete user profile
-        const finalProfile = {
-          status: "profile_complete",
-          collected_info: {
-            investment_theme: userPreferences.theme,
-            risk_tolerance: userPreferences.riskLevel,
-            time_horizon: userPreferences.timeHorizon,
-            preferred_sectors: this.extractSectors({ theme: userPreferences.theme }),
-            specific_preferences: userPreferences.preferences
-          },
-          conversation_summary: `User profile complete: ${userPreferences.theme} with ${userPreferences.riskLevel}/10 risk for ${userPreferences.timeHorizon} timeline`
-        };
+      if (!this.openaiApiKey) {
+        console.warn('⚠️ [AgentService] OpenAI API key not configured, using fallback');
+        return this.fallbackChatResponse(chatMessage, conversationHistory);
+      }
 
-        // Generate portfolio
-        const portfolioResult = await this.generatePortfolio(finalProfile);
+      // Use actual OpenAI to process the chat
+      const response = await this.callAgent1(chatMessage, conversationHistory);
+      console.log('🤖 [AgentService] Agent1 response received');
+
+      // Check if the response contains a complete profile JSON
+      const profileMatch = this.extractProfileFromResponse(response);
+
+      if (profileMatch) {
+        console.log('🎯 [AgentService] Profile complete detected, generating portfolio');
+
+        // Generate portfolio using the complete profile
+        const portfolioResult = await this.generatePortfolio(profileMatch);
 
         if (portfolioResult.success) {
+          const finalResponse = this.generateFinalChatResponse(profileMatch, portfolioResult.data);
+
           return this.formatSuccess({
-            user_analysis: finalProfile,
+            user_analysis: profileMatch,
             portfolio: portfolioResult.data,
-            chat_response: this.generateFinalChatResponse(finalProfile, portfolioResult.data),
+            chat_response: finalResponse,
             is_complete: true
           }, 'Profile complete and portfolio generated');
         }
       }
 
+      // Regular conversation response
       return this.formatSuccess({
         user_analysis: null,
         portfolio: null,
-        chat_response: nextMessage,
+        chat_response: response,
         is_complete: false,
-        step: Math.floor(conversationLength / 2) + 1
+        step: Math.floor(conversationHistory.length / 2) + 1
       }, 'Conversation continuing');
 
     } catch (error) {
+      console.error('❌ [AgentService] processUserChat error:', {
+        message: error.message,
+        stack: error.stack?.split('\n').slice(0, 3).join('\n')
+      });
       return this.formatError(error, 500, 'Failed to process user chat');
+    }
+  }
+
+  async callAgent1(userMessage, conversationHistory) {
+    const OpenAI = require('openai');
+    const client = new OpenAI({ apiKey: this.openaiApiKey });
+
+    const INVESTMENT_AGENT_SYSTEM_PROMPT = `
+You are Burp's User Analysis Agent - a crypto investment assistant that guides users through creating personalized investment portfolios. You must follow a structured conversation flow to collect specific information.
+
+CORE MISSION: Guide users through 6 steps to build their crypto investment profile, then output a final JSON with their complete preferences.
+
+CONVERSATION FLOW (MUST FOLLOW IN ORDER):
+
+STEP 1: CATEGORY INTRODUCTION
+- Briefly introduce 4-5 crypto categories:
+  • Stablecoins: Low volatility assets pegged to fiat (USDC, USDT)
+  • Utility Tokens: Access to specific services (Chainlink, Uniswap)
+  • Governance Tokens: Vote on protocols (AAVE, Compound)
+  • Platform Tokens: Support broader ecosystems (Ethereum, Polkadot)
+  • Others: Gaming, Data Storage (Filecoin), AI tokens, etc.
+- Ask: "Which coins or categories interest you for investment?"
+
+STEP 2: THEME CONFIRMATION
+- Confirm their category selection
+- Ask if they want to add/modify anything
+- Finalize their investment theme
+
+STEP 3: TIMELINE
+- Ask: "How long—short-term, medium-term, or long-term?"
+- Accept ranges and approximations
+- Don't ask for clarification unless completely unclear
+
+STEP 4: SPECIFIC PREFERENCES
+- Ask: "Do you have any specific preferences? For example, avoiding speculative assets like meme coins, preferring established projects, or including staking options."
+- Accept any preferences they mention
+
+STEP 5: SUMMARY & CONFIRMATION
+- Present complete summary with deduced risk tolerance
+- Ask for confirmation or corrections
+- If corrections needed, address them and re-summarize
+
+RISK FACTOR ASSESSMENT (0–10, DO THIS AUTOMATICALLY):
+Score risk based on user chat cues — no direct amount asked.
+- Tone: cautious = lower, neutral = flat, confident/speculative = higher
+- Assets: stablecoins/blue chips = lower, mix = mid, volatile/niche/meme = higher
+- Timeframe: long-term = lower, mid-term = mid, short-term/trading = higher
+- Diversification: broad spread = lower, concentrated/all-in = higher
+- Signals: mentions of safety/hedging = lower, hype/quick gains = higher
+
+CRITICAL RULES:
+1. NEVER skip steps or ask multiple questions at once
+2. ONLY move to next step after collecting current step's info
+3. Keep responses brief and focused (2-3 sentences max per response)
+4. Track conversation state internally - remember what's been collected
+5. Don't repeat information already gathered
+6. Be conversational but purposeful
+
+FINAL OUTPUT FORMAT (only provide when user confirms final summary):
+{
+  "status": "profile_complete",
+  "collected_info": {
+    "investment_theme": "user's finalized theme",
+    "risk_tolerance": 5,
+    "time_horizon": "short_term/medium_term/long_term",
+    "preferred_sectors": ["array", "of", "sectors"],
+    "specific_preferences": ["array", "of", "preferences"]
+  },
+  "conversation_summary": "Brief summary of key decisions made"
+}
+
+CONVERSATION STATE TRACKING:
+Internally track which step you're on:
+- Step 1: Introducing categories → asking for interests
+- Step 2: Confirming theme selection
+- Step 3: Collecting timeline
+- Step 4: Gathering specific preferences
+- Step 5: Summarizing and confirming
+
+TONE: Friendly, helpful, professional. Speak like a knowledgeable investment advisor who explains things simply.
+
+REMEMBER: You're building towards creating AI-managed crypto portfolios on a decentralized platform. The data you collect will be used by AI agents to automatically manage their investments.
+
+Start the conversation by introducing yourself and beginning with Step 1.
+`;
+
+    // Build messages array
+    const messages = [{ role: "system", content: INVESTMENT_AGENT_SYSTEM_PROMPT }];
+
+    // Add conversation history
+    conversationHistory.forEach(msg => {
+      messages.push({ role: msg.role, content: msg.content });
+    });
+
+    // Add current user message
+    messages.push({ role: "user", content: userMessage });
+
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: messages,
+      temperature: 0.7,
+    });
+
+    return response.choices[0].message.content;
+  }
+
+  extractProfileFromResponse(response) {
+    try {
+      // Look for JSON block in the response
+      const match = response.match(/\{[\s\S]*\}/);
+      if (match) {
+        const profile = JSON.parse(match[0]);
+        if (profile.status === "profile_complete") {
+          return profile;
+        }
+      }
+    } catch (e) {
+      console.log('🔍 [AgentService] No valid profile JSON found in response');
+    }
+    return null;
+  }
+
+  fallbackChatResponse(userMessage, conversationHistory) {
+    // Fallback logic when OpenAI is not available
+    const conversationLength = conversationHistory.length;
+    const lowerMessage = userMessage.toLowerCase();
+
+    if (conversationLength <= 2) {
+      const responseMessage = lowerMessage.includes('defi') || lowerMessage.includes('gaming') || lowerMessage.includes('ai')
+        ? `Great choice! I see you're interested in ${lowerMessage.includes('defi') ? 'DeFi' : lowerMessage.includes('gaming') ? 'gaming' : 'AI'} investing. What's your investment timeline - short-term, medium-term, or long-term?`
+        : "Great choice! I see you're interested in crypto investing. What's your investment timeline - short-term, medium-term, or long-term?";
+
+      return this.formatSuccess({
+        chat_response: responseMessage,
+        is_complete: false,
+        step: 2
+      }, 'Conversation continuing');
+    } else if (conversationLength <= 4) {
+      return this.formatSuccess({
+        chat_response: "Perfect! Do you have any specific preferences? For example, avoiding speculative assets or preferring established projects?",
+        is_complete: false,
+        step: 3
+      }, 'Conversation continuing');
+    } else {
+      // Generate fallback profile based on user input
+      const theme = lowerMessage.includes('defi') ? 'DeFi focus' :
+                   lowerMessage.includes('gaming') ? 'Gaming and metaverse' :
+                   lowerMessage.includes('ai') ? 'AI and technology' :
+                   'Balanced crypto portfolio';
+
+      const fallbackProfile = {
+        status: "profile_complete",
+        collected_info: {
+          investment_theme: theme,
+          risk_tolerance: 5,
+          time_horizon: "medium_term",
+          preferred_sectors: ["Layer-1", "DeFi"],
+          specific_preferences: ["Established projects"]
+        },
+        conversation_summary: `User profile complete with ${theme.toLowerCase()} approach`
+      };
+
+      return this.formatSuccess({
+        user_analysis: fallbackProfile,
+        portfolio: null,
+        chat_response: "Perfect! Based on our conversation, I'll create a balanced portfolio for you. Would you like to proceed?",
+        is_complete: true
+      }, 'Profile complete');
     }
   }
 
@@ -369,52 +521,15 @@ class AgentService extends BaseService {
     return `Perfect! Based on our conversation, I've created a ${tokens.length}-token portfolio focusing on ${theme} with ${risk}/10 risk tolerance. Your portfolio includes ${mainTokens} and other carefully selected assets. The expected return is ${12 + risk * 2}%+ annually with proper diversification across ${portfolioData.risk_analysis?.diversification_score || 'multiple'} categories. Would you like to proceed with creating this investment cluster?`;
   }
 
-  extractThemeFromChat(message) {
-    const text = message.toLowerCase();
-    if (text.includes('defi') || text.includes('decentralized finance')) return 'DeFi focus';
-    if (text.includes('gaming')) return 'Gaming and metaverse';
-    if (text.includes('stable') || text.includes('safe')) return 'Conservative stable assets';
-    if (text.includes('growth') || text.includes('high return')) return 'Growth and high potential';
-    if (text.includes('ai') || text.includes('artificial intelligence')) return 'AI and technology';
-    return 'Balanced diversified portfolio';
-  }
-
-  extractTimeHorizonFromChat(message) {
-    const text = message.toLowerCase();
-    if (text.includes('short') || text.includes('month') || text.includes('quick')) return 'short_term';
-    if (text.includes('long') || text.includes('year') || text.includes('hold')) return 'long_term';
-    return 'medium_term';
-  }
-
-  extractRiskFromChat(message) {
-    const text = message.toLowerCase();
-    if (text.includes('safe') || text.includes('conservative') || text.includes('low risk')) return 3;
-    if (text.includes('aggressive') || text.includes('high risk') || text.includes('risky')) return 8;
-    if (text.includes('moderate') || text.includes('medium')) return 5;
-    return 5;
-  }
-
-  extractPreferencesFromChat(message) {
-    const preferences = [];
-    const text = message.toLowerCase();
-
-    if (text.includes('no meme')) preferences.push('Avoid meme coins');
-    if (text.includes('staking')) preferences.push('Include staking opportunities');
-    if (text.includes('established') || text.includes('blue chip')) preferences.push('Prefer established projects');
-    if (text.includes('new') || text.includes('emerging')) preferences.push('Include emerging projects');
-
-    return preferences;
-  }
-
-  generateChatResponse(userMessage, portfolio) {
-    if (!portfolio) {
-      return "I understand your investment interests. Let me create a personalized portfolio for you based on your preferences.";
-    }
-
-    const tokenCount = portfolio.selected_tokens?.length || 0;
-    const mainTokens = portfolio.selected_tokens?.slice(0, 3).map(t => t.symbol).join(', ') || 'diversified assets';
-
-    return `Based on your preferences, I've created a ${tokenCount}-token portfolio focused on ${mainTokens}. The allocation balances your risk tolerance with growth potential. Would you like me to explain the reasoning behind any specific token selections?`;
+  async getTrendingThemes() {
+    // In production, this could fetch from external APIs or database
+    return [
+      { theme: 'AI & Technology', description: 'Artificial intelligence and tech infrastructure tokens', risk: 6 },
+      { theme: 'DeFi Blue Chips', description: 'Established decentralized finance protocols', risk: 5 },
+      { theme: 'Layer 1 Dominance', description: 'Leading blockchain platforms and ecosystems', risk: 4 },
+      { theme: 'Gaming & Metaverse', description: 'Virtual worlds and blockchain gaming tokens', risk: 7 },
+      { theme: 'Stable & Yield', description: 'Stablecoins and yield-generating assets', risk: 2 }
+    ];
   }
 }
 

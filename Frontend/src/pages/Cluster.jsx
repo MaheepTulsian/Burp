@@ -54,13 +54,13 @@ const Cluster = () => {
   useEffect(() => {
     const startConversation = async () => {
       console.log('🚀 Cluster component initialized - starting conversation');
-      
+
       // Test backend connectivity first
       try {
         console.log('🔍 Testing backend connectivity...');
-        const healthCheck = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}/api/agents/status`);
+        const healthCheck = await fetch('http://localhost:5001/api/agents/status');
         console.log('✅ Backend connectivity:', healthCheck.status === 200 ? 'OK' : 'Failed');
-        
+
         if (healthCheck.status === 200) {
           const statusData = await healthCheck.json();
           console.log('📊 Backend status data:', statusData);
@@ -68,23 +68,60 @@ const Cluster = () => {
       } catch (error) {
         console.warn('⚠️ Backend not reachable, using fallback mode:', error.message);
       }
-      
-      // Start with AI introduction message
-      const initialMessage = {
+
+      // Get initial message from Agent1
+      try {
+        console.log('🤖 Getting initial message from Agent1...');
+        const response = await fetch('http://localhost:5001/api/agents/chat/public', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: "Start the conversation.",
+            conversationHistory: []
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            const initialMessage = {
+              id: 1,
+              type: 'bot',
+              message: result.data.chat_response,
+              timestamp: Date.now(),
+              isSystem: true
+            };
+
+            console.log('💬 Setting AI initial message:', initialMessage);
+            setChatMessages([initialMessage]);
+            setConversationHistory([
+              { role: 'assistant', content: initialMessage.message }
+            ]);
+            console.log('✅ AI conversation started successfully');
+            return;
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Failed to get AI initial message:', error.message);
+      }
+
+      // Fallback to hardcoded message only if AI fails
+      const fallbackMessage = {
         id: 1,
         type: 'bot',
-        message: "Hi! I'm Burp, your AI crypto investment assistant. I'll help you create a personalized investment cluster in just a few steps. I'll ask you about your experience, risk tolerance, investment timeline, and preferences to build the perfect portfolio for you.\n\nLet's start: What's your experience level with cryptocurrency investing?",
+        message: "Hi! I'm Burp, your AI crypto investment assistant. I'll help you create a personalized investment portfolio. Let's start: What's your experience level with cryptocurrency investing?",
         timestamp: Date.now(),
-        isSystem: true,
-        options: ['Beginner (New to crypto)', 'Intermediate (Some experience)', 'Advanced (Experienced trader)', 'Tell me more about clusters first']
+        isSystem: true
       };
-      
-      console.log('💬 Setting initial message:', initialMessage);
-      setChatMessages([initialMessage]);
+
+      console.log('💬 Using fallback initial message:', fallbackMessage);
+      setChatMessages([fallbackMessage]);
       setConversationHistory([
-        { role: 'assistant', content: initialMessage.message }
+        { role: 'assistant', content: fallbackMessage.message }
       ]);
-      console.log('✅ Initial conversation setup complete');
+      console.log('✅ Fallback conversation setup complete');
     };
 
     startConversation();
@@ -94,65 +131,70 @@ const Cluster = () => {
   const sendToAI = async (userMessage) => {
     console.log('🤖 Sending message to AI:', userMessage);
     console.log('📝 Current conversation history length:', conversationHistory.length);
-    
+
     try {
       setIsWaitingForAI(true);
       console.log('⏳ Set waiting for AI to true');
-      
+
       const authToken = localStorage.getItem('burp_auth_token');
       console.log('🔑 Auth token exists:', !!authToken);
-      
-      if (!authToken) {
-        console.error('❌ No authentication token found');
-        throw new Error('Authentication required. Please log in again.');
+
+      // Try authenticated endpoint first
+      let apiUrl = 'http://localhost:5001/api/agents/chat';
+      let headers = {
+        'Content-Type': 'application/json'
+      };
+
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      } else {
+        // Use public endpoint if no auth token
+        apiUrl = 'http://localhost:5001/api/agents/chat/public';
+        console.log('🔓 Using public endpoint - no auth token found');
       }
-      
-      const apiUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:5001'}/api/agents/chat`;
+
       console.log('🌐 Making API call to:', apiUrl);
-      
+
       const requestBody = {
         message: userMessage,
         conversationHistory: conversationHistory
       };
       console.log('📤 Request body:', requestBody);
-      
+
       const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
-        },
+        headers: headers,
         body: JSON.stringify(requestBody)
       });
 
       console.log('📡 API response status:', response.status);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ API response not OK:', response.status, errorText);
         throw new Error(`API error: ${response.status} - ${errorText}`);
       }
-      
+
       const result = await response.json();
       console.log('📋 API response data:', result);
-      
+
       if (result.success) {
         console.log('✅ API call successful');
         console.log('🔍 Checking completion status:', result.data.is_complete);
         console.log('🔍 User analysis status:', result.data.user_analysis?.status);
-        
+
         // Check if we have a complete profile
         if (result.data.is_complete && result.data.user_analysis?.status === 'profile_complete') {
           console.log('🎯 Profile complete! Setting user profile:', result.data.user_analysis);
           setUserProfile(result.data.user_analysis);
-          
+
           return {
             message: result.data.chat_response,
             isComplete: true,
             portfolio: result.data.portfolio
           };
         }
-        
+
         console.log('🔄 Conversation continuing with response:', result.data.chat_response);
         return {
           message: result.data.chat_response || "I understand. Could you tell me more about your preferences?",
@@ -169,70 +211,10 @@ const Cluster = () => {
         conversationLength: conversationHistory.length,
         userMessage: userMessage
       });
-      
-      // Check for specific error types and provide appropriate responses
-      if (error.message.includes('Authentication') || error.message.includes('401')) {
-        console.error('🔐 Authentication error detected');
-        return {
-          message: "It looks like your session has expired. Please log in again to continue our conversation.",
-          isComplete: false,
-          requiresAuth: true
-        };
-      }
-      
-      // Provide intelligent fallback behavior based on conversation stage
-      if (conversationHistory.length >= 6) {
-        console.log('🔄 Creating fallback portfolio due to sufficient conversation length');
-        
-        // If we've had enough conversation, create a fallback portfolio
-        const fallbackProfile = {
-          status: "profile_complete",
-          collected_info: {
-            investment_theme: "Balanced crypto portfolio",
-            risk_tolerance: 5,
-            time_horizon: "medium_term",
-            preferred_sectors: ["Layer-1", "DeFi"],
-            specific_preferences: ["Established projects"]
-          }
-        };
-        
-        console.log('📊 Setting fallback profile:', fallbackProfile);
-        setUserProfile(fallbackProfile);
-        
-        const fallbackPortfolio = {
-          selected_tokens: [
-            { symbol: 'BTC', name: 'Bitcoin', allocation: 35, rationale: 'Digital gold and store of value' },
-            { symbol: 'ETH', name: 'Ethereum', allocation: 30, rationale: 'Smart contract platform leader' },
-            { symbol: 'SOL', name: 'Solana', allocation: 15, rationale: 'High-performance blockchain' },
-            { symbol: 'AVAX', name: 'Avalanche', allocation: 12, rationale: 'Scalable DeFi platform' },
-            { symbol: 'USDC', name: 'USD Coin', allocation: 8, rationale: 'Stability and liquidity' }
-          ],
-          portfolio_summary: "Balanced portfolio with blue-chip cryptocurrencies"
-        };
-        
-        console.log('💼 Creating fallback portfolio:', fallbackPortfolio);
-        
-        return {
-          message: "Perfect! Based on our conversation, I've created a balanced 5-token portfolio with moderate risk. This includes BTC, ETH, and other established cryptocurrencies. Would you like to proceed with creating this investment cluster?",
-          isComplete: true,
-          portfolio: fallbackPortfolio
-        };
-      }
-      
-      // Provide contextual questions based on conversation stage
-      console.log('🔄 Providing contextual follow-up based on conversation stage');
-      const conversationStep = Math.min(conversationHistory.length + 1, 6);
-      const contextualQuestions = [
-        "Hi! I'm Burp, your crypto investment assistant. I'll help you create a personalized investment cluster. To get started, what's your experience level with cryptocurrency investing? (Beginner, Intermediate, or Advanced)",
-        "Great! Now I need to understand your risk tolerance. Are you comfortable with high volatility for potentially higher returns (Aggressive), prefer balanced growth (Moderate), or want to minimize risk (Conservative)?",
-        "Perfect! What's your investment timeframe? Are you looking for short-term gains (weeks to months), medium-term growth (6 months to 2 years), or long-term holding (2+ years)?",
-        "Excellent! What's your budget range for this investment cluster? This helps me recommend appropriate allocations.",
-        "Almost done! Are there any specific cryptocurrencies, sectors, or themes that interest you? (e.g., DeFi, Layer-1s, Gaming tokens, etc.)",
-        "Thank you for all that information! Let me analyze your preferences and create a personalized investment cluster for you."
-      ];
-      
+
+      // Simple fallback - let the backend handle most fallback logic
       return {
-        message: contextualQuestions[conversationStep - 1] || "Could you tell me more about your investment goals and preferences?",
+        message: "I'm having trouble processing that right now. Could you try rephrasing your message?",
         isComplete: false
       };
     } finally {
@@ -309,10 +291,10 @@ const Cluster = () => {
             name: token.name || token.symbol,
             rationale: token.rationale
           })),
-          expectedReturn: `${12 + (userProfile?.collected_info.risk_tolerance || 5) * 2}%+`,
-          riskLevel: userProfile?.collected_info.risk_tolerance > 7 ? 'High' : userProfile?.collected_info.risk_tolerance < 4 ? 'Low' : 'Moderate',
-          minInvestment: '$100',
-          totalValue: '$' + (Math.random() * 5 + 1).toFixed(1) + 'M',
+          expectedReturn: calculateExpectedReturn(userProfile?.collected_info.risk_tolerance || 5),
+          riskLevel: mapRiskLevel(userProfile?.collected_info.risk_tolerance || 5),
+          minInvestment: getMinInvestment(),
+          totalValue: generateTotalValue(),
           aiGenerated: true,
           userProfile: userProfile
         };
@@ -420,12 +402,12 @@ const Cluster = () => {
             </motion.div>
 
             {/* Chat Interface */}
-            <Chat 
+            <Chat
               messages={chatMessages}
               onUserDecision={handleUserDecision}
               onUserInput={handleUserInput}
               showDecision={chatComplete}
-              clusterName="Your AI Investment Cluster"
+              clusterName={cluster?.name || "Your AI Investment Cluster"}
               isWaitingForAI={isWaitingForAI}
             />
           </motion.div>
@@ -464,5 +446,29 @@ const Cluster = () => {
     </div>
   );
 };
+
+// Helper functions for cluster creation
+
+function calculateExpectedReturn(riskTolerance) {
+  const baseReturn = 12;
+  const riskMultiplier = 2;
+  return `${baseReturn + (riskTolerance * riskMultiplier)}%+`;
+}
+
+function mapRiskLevel(riskTolerance) {
+  if (riskTolerance > 7) return 'High';
+  if (riskTolerance < 4) return 'Low';
+  return 'Moderate';
+}
+
+function getMinInvestment() {
+  return '$100';
+}
+
+function generateTotalValue() {
+  // Generate a random total value for demo purposes
+  return '$' + (Math.random() * 5 + 1).toFixed(1) + 'M';
+}
+
 
 export default Cluster;

@@ -58,12 +58,12 @@ router.post('/generate-portfolio', authenticateToken, async (req, res) => {
         description: portfolioResult.data.portfolio_summary,
         tokens: portfolioResult.data.selected_tokens.map(token => ({
           symbol: token.symbol,
-          address: '0x' + token.symbol.toLowerCase().padEnd(40, '0'),
+          address: token.address || generateTokenAddress(token.symbol),
           weight: token.allocation,
           name: token.name || token.symbol,
           rationale: token.rationale
         })),
-        riskLevel: ['conservative', 'moderate', 'aggressive'][Math.floor(userProfile.collected_info.risk_tolerance / 3.5)],
+        riskLevel: mapRiskLevel(userProfile.collected_info.risk_tolerance),
         category: 'ai-generated',
         aiMetadata: {
           model: 'Burp-v1',
@@ -93,6 +93,64 @@ router.post('/generate-portfolio', authenticateToken, async (req, res) => {
 
 router.post('/chat', authenticateToken, async (req, res) => {
   try {
+    console.log('\n🤖 [agents/chat] Authenticated chat request received');
+    console.log('📝 [agents/chat] User ID:', req.user?.id || 'Unknown');
+    console.log('📝 [agents/chat] Request headers:', {
+      origin: req.headers.origin,
+      'user-agent': req.headers['user-agent']?.slice(0, 50) + '...',
+      authorization: req.headers.authorization ? 'Bearer ***' : 'None'
+    });
+
+    const { message, conversationHistory } = req.body;
+    console.log('💬 [agents/chat] Message length:', message?.length || 0);
+    console.log('💬 [agents/chat] Message preview:', message?.slice(0, 100) + (message?.length > 100 ? '...' : ''));
+    console.log('📚 [agents/chat] Conversation history length:', conversationHistory?.length || 0);
+
+    if (!message) {
+      console.warn('⚠️ [agents/chat] Missing message in request');
+      return res.status(400).json({
+        success: false,
+        message: 'Chat message is required'
+      });
+    }
+
+    console.log('🔄 [agents/chat] Processing with AgentService...');
+    const startTime = Date.now();
+    const result = await agentService.processUserChat(message, conversationHistory || []);
+    const processingTime = Date.now() - startTime;
+
+    console.log('✅ [agents/chat] AgentService completed in', processingTime + 'ms');
+    console.log('📤 [agents/chat] Response success:', result.success);
+    console.log('📤 [agents/chat] Response data keys:', Object.keys(result.data || {}));
+
+    if (result.data?.is_complete) {
+      console.log('🎯 [agents/chat] Conversation marked as COMPLETE');
+    }
+
+    res.json(result);
+
+  } catch (error) {
+    console.error('❌ [agents/chat] Error occurred:', {
+      message: error.message,
+      stack: error.stack?.split('\n').slice(0, 3).join('\n'),
+      timestamp: new Date().toISOString()
+    });
+    res.status(500).json(agentService.formatError(error, 500));
+  }
+});
+
+// Public chat endpoint (no authentication) - useful for local/dev or when user is not logged in
+router.post('/chat/public', async (req, res) => {
+  try {
+    // Debug: log incoming request metadata to help diagnose frontend issues
+    console.log('\n[agents] /chat/public request from', req.ip, 'headers:', {
+      origin: req.headers.origin,
+      host: req.headers.host,
+      referer: req.headers.referer,
+      ua: req.headers['user-agent']
+    });
+    console.log('[agents] request body:', JSON.stringify(req.body).slice(0, 1000));
+
     const { message, conversationHistory } = req.body;
 
     if (!message) {
@@ -142,12 +200,12 @@ router.post('/quick-portfolio', authenticateToken, async (req, res) => {
         description: `AI-generated portfolio for ${theme} with ${riskLevel}/10 risk level`,
         tokens: portfolioResult.data.selected_tokens.map(token => ({
           symbol: token.symbol,
-          address: '0x' + token.symbol.toLowerCase().padEnd(40, '0'),
+          address: token.address || generateTokenAddress(token.symbol),
           weight: token.allocation,
           name: token.name || token.symbol,
           rationale: token.rationale
         })),
-        riskLevel: ['conservative', 'moderate', 'aggressive'][Math.floor(riskLevel / 3.5)],
+        riskLevel: mapRiskLevel(riskLevel),
         category: 'ai-generated'
       };
 
@@ -208,13 +266,7 @@ router.get('/tokens/whitelist', async (req, res) => {
 
 router.get('/recommendations/trending', async (req, res) => {
   try {
-    const trendingThemes = [
-      { theme: 'AI & Technology', description: 'Artificial intelligence and tech infrastructure tokens', risk: 6 },
-      { theme: 'DeFi Blue Chips', description: 'Established decentralized finance protocols', risk: 5 },
-      { theme: 'Layer 1 Dominance', description: 'Leading blockchain platforms and ecosystems', risk: 4 },
-      { theme: 'Gaming & Metaverse', description: 'Virtual worlds and blockchain gaming tokens', risk: 7 },
-      { theme: 'Stable & Yield', description: 'Stablecoins and yield-generating assets', risk: 2 }
-    ];
+    const trendingThemes = await agentService.getTrendingThemes();
 
     const recommendations = [];
 
@@ -235,7 +287,7 @@ router.get('/recommendations/trending', async (req, res) => {
           description: theme.description,
           risk_level: theme.risk,
           tokens: portfolioResult.data.selected_tokens.slice(0, 5),
-          estimated_return: `${15 + theme.risk * 5}% annually`
+          estimated_return: calculateEstimatedReturn(theme.risk)
         });
       }
     }
@@ -254,5 +306,24 @@ router.get('/recommendations/trending', async (req, res) => {
     res.status(500).json(agentService.formatError(error, 500));
   }
 });
+
+// Helper functions
+function generateTokenAddress(symbol) {
+  // Generate a deterministic address based on symbol for demo purposes
+  // In production, this should fetch real contract addresses
+  return '0x' + symbol.toLowerCase().padEnd(40, '0');
+}
+
+function mapRiskLevel(riskTolerance) {
+  if (riskTolerance <= 3) return 'conservative';
+  if (riskTolerance <= 7) return 'moderate';
+  return 'aggressive';
+}
+
+function calculateEstimatedReturn(riskLevel) {
+  const baseReturn = 12;
+  const riskMultiplier = 3;
+  return `${baseReturn + (riskLevel * riskMultiplier)}% annually`;
+}
 
 module.exports = router;
