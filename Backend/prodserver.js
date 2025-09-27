@@ -12,12 +12,23 @@ const pricingRouter = require('./routes/pricing');
 const blockchainRouter = require('./routes/blockchain');
 const agentsRouter = require('./routes/agents');
 const transactionsRouter = require('./routes/transactions');
-
+const fs = require('fs');
+const https = require('https');
 const User = require('./database/models/User');
 const Basket = require('./database/models/Basket');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+
+const HTTPS_OPTIONS = {
+  key: fs.existsSync('/home/ubuntu/ssl/server.key')
+        ? fs.readFileSync('/home/ubuntu/ssl/server.key')
+        : null,
+  cert: fs.existsSync('/home/ubuntu/ssl/server.crt')
+        ? fs.readFileSync('/home/ubuntu/ssl/server.crt')
+        : null,
+};
+
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -208,14 +219,6 @@ app.use((error, req, res, next) => {
   });
 });
 
-const HTTPS_OPTIONS = {
-  key: fs.existsSync('/home/ubuntu/ssl/server.key') 
-        ? fs.readFileSync('/home/ubuntu/ssl/server.key') 
-        : null,
-  cert: fs.existsSync('/home/ubuntu/ssl/server.crt') 
-        ? fs.readFileSync('/home/ubuntu/ssl/server.crt') 
-        : null,
-};
 
 const startServer = async () => {
   try {
