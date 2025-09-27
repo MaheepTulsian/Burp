@@ -19,10 +19,11 @@ class AuthService extends BaseService {
         throw new Error('Invalid Ethereum wallet address');
       }
 
-      const nonce = createNonce(walletAddress);
+      const { nonce, signMessage } = createNonce(walletAddress);
 
       return this.formatResponse({
         nonce,
+        signMessage,
         walletAddress: walletAddress.toLowerCase()
       }, 'Nonce generated successfully');
     } catch (error) {

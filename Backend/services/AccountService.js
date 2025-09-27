@@ -13,28 +13,44 @@ class AccountService extends BaseService {
 
   async createAccount(walletAddress, signature, nonce, profileData = {}) {
     try {
+      console.log('🔍 AccountService.createAccount called with:', {
+        walletAddress,
+        nonce,
+        hasSignature: !!signature,
+        profileData
+      });
+
       // Validate wallet address format
       if (!isValidEthereumAddress(walletAddress)) {
         throw new Error('Invalid Ethereum wallet address');
       }
 
       // Verify signature from frontend
+      console.log('🔐 Verifying signature...');
       const verificationResult = await verifySignature(walletAddress, signature, nonce);
+      console.log('🔐 Verification result:', { isValid: verificationResult.isValid, error: verificationResult.error });
+      
       if (!verificationResult.isValid) {
         throw new Error(verificationResult.error || 'Signature verification failed');
       }
 
       const normalizedAddress = verificationResult.walletAddress;
+      console.log('📍 Normalized address:', normalizedAddress);
 
       // Check if user already exists
+      console.log('🔍 Checking if user exists in database...');
       let user = await this.userModel.findOne({ walletAddress: normalizedAddress });
+      console.log('👤 Existing user found:', !!user);
 
       if (user) {
         // Update last login time for existing user
+        console.log('📝 Updating existing user login time:', normalizedAddress);
         user.lastLoginAt = new Date();
         await user.save();
+        console.log('✅ Existing user updated successfully');
       } else {
         // Create new user account
+        console.log('🆕 Creating new user in MongoDB:', normalizedAddress);
         const userData = {
           walletAddress: normalizedAddress,
           email: profileData.email || null,
@@ -44,12 +60,15 @@ class AccountService extends BaseService {
           isActive: true
         };
 
+        console.log('📋 User data to save:', userData);
         user = new this.userModel(userData);
-        await user.save();
+        const savedUser = await user.save();
+        console.log('✅ New user created successfully with ID:', savedUser._id);
       }
 
       // Generate JWT session token
       const token = generateToken(user._id, normalizedAddress);
+      console.log('🎫 JWT token generated successfully');
 
       return this.formatResponse({
         user: {
@@ -66,6 +85,7 @@ class AccountService extends BaseService {
       }, user ? 'Account verified and logged in' : 'Account created successfully');
 
     } catch (error) {
+      console.error('❌ AccountService.createAccount error:', error);
       throw error;
     }
   }

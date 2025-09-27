@@ -10,13 +10,17 @@ const generateNonce = () => {
 const createNonce = (walletAddress) => {
   const nonce = generateNonce();
   const expiresAt = Date.now() + (5 * 60 * 1000);
+  const timestamp = new Date().toISOString();
+  const signMessage = createSignMessage(nonce, walletAddress, timestamp);
 
   nonceStore.set(walletAddress.toLowerCase(), {
     nonce,
-    expiresAt
+    expiresAt,
+    timestamp,
+    signMessage
   });
 
-  return nonce;
+  return { nonce, signMessage };
 };
 
 const getNonce = (walletAddress) => {
@@ -32,6 +36,21 @@ const getNonce = (walletAddress) => {
   }
 
   return nonceData.nonce;
+};
+
+const getSignMessage = (walletAddress) => {
+  const nonceData = nonceStore.get(walletAddress.toLowerCase());
+
+  if (!nonceData) {
+    return null;
+  }
+
+  if (Date.now() > nonceData.expiresAt) {
+    nonceStore.delete(walletAddress.toLowerCase());
+    return null;
+  }
+
+  return nonceData.signMessage;
 };
 
 const clearNonce = (walletAddress) => {
@@ -55,14 +74,15 @@ const isValidEthereumAddress = (address) => {
   }
 };
 
-const createSignMessage = (nonce, walletAddress) => {
+const createSignMessage = (nonce, walletAddress, timestamp = null) => {
+  const actualTimestamp = timestamp || new Date().toISOString();
   return `Welcome to BURP - Blockchain Unified Rebalancing Platform!
 
 Please sign this message to authenticate your wallet.
 
 Wallet: ${walletAddress}
 Nonce: ${nonce}
-Timestamp: ${new Date().toISOString()}
+Timestamp: ${actualTimestamp}
 
 This request will not trigger a blockchain transaction or cost any gas fees.`;
 };
@@ -78,7 +98,11 @@ const verifySignature = async (walletAddress, signature, nonce) => {
       throw new Error('Invalid or expired nonce');
     }
 
-    const message = createSignMessage(nonce, walletAddress);
+    // Use the exact message that was signed, not recreate it
+    const message = getSignMessage(walletAddress);
+    if (!message) {
+      throw new Error('Original sign message not found');
+    }
 
     const recoveredAddress = ethers.verifyMessage(message, signature);
 
@@ -150,6 +174,7 @@ setInterval(cleanupExpiredNonces, 60000);
 module.exports = {
   createNonce,
   getNonce,
+  getSignMessage,
   clearNonce,
   isValidEthereumAddress,
   createSignMessage,

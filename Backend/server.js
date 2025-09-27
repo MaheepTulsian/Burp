@@ -39,9 +39,13 @@ app.use(helmet({
   },
 }));
 
+// CORS configuration - simplified for debugging
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || ['http://localhost:3000', 'http://localhost:5001'],
-  credentials: true
+  origin: ['http://localhost:3000', 'http://localhost:8080', 'http://localhost:8081', 'http://localhost:5001'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
 }));
 
 app.use(limiter);
@@ -57,46 +61,34 @@ const connectDatabase = async () => {
     if (process.env.MONGODB_URI && process.env.MONGODB_URI.includes('mongodb+srv')) {
       mongoUri = process.env.MONGODB_URI;
       console.log('🌐 Using MongoDB Atlas');
+    } else if (process.env.MONGODB_URI) {
+      mongoUri = process.env.MONGODB_URI;
+      console.log('💾 Using MongoDB URI:', mongoUri.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@'));
     } else {
-      // Use in-memory database for testing
+      // Use local database for testing
       mongoUri = 'mongodb://localhost:27017/burp-test';
-      console.log('💾 Using in-memory database for testing');
+      console.log('💾 Using local MongoDB for testing');
     }
 
+    console.log('🔌 Connecting to database...');
     await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
 
-    console.log('✅ Connected to database');
-
-    initializeAuthService(User);
-    console.log('✅ Auth service initialized');
+    console.log('✅ Connected to database successfully');
+    console.log('📊 Database connection state:', mongoose.connection.readyState);
 
   } catch (error) {
-    console.warn('⚠️ Database connection failed, using mock mode:', error.message);
-
-    // Create mock User model for testing
-    function MockUser(data) {
-      this._id = 'mock-id-' + Math.random().toString(36);
-      this.walletAddress = data.walletAddress;
-      this.email = data.email;
-      this.createdAt = new Date();
-    }
-
-    MockUser.prototype.save = function() {
-      return Promise.resolve(this);
-    };
-
-    MockUser.findOne = () => Promise.resolve(null);
-    MockUser.findById = () => Promise.resolve(null);
-    MockUser.findByIdAndUpdate = () => Promise.resolve(null);
-    MockUser.findByIdAndDelete = () => Promise.resolve(null);
-
-    initializeAuthService(MockUser);
-    console.log('✅ Mock auth service initialized');
+    console.error('❌ Database connection failed:', error.message);
+    
+    // Don't fall back to mock mode, throw the error instead
+    throw new Error(`Database connection failed: ${error.message}`);
   }
 };
+
+// Initialize services with mock data first, will be updated when database connects
+initializeAuthService(User);
 
 app.use('/auth', authRouter);
 app.use('/api/baskets', basketRouter);

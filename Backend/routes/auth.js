@@ -16,6 +16,7 @@ const initializeAuthService = (userModel) => {
 router.post('/nonce', async (req, res) => {
   try {
     const { walletAddress } = req.body;
+    console.log('🔑 Nonce request received for wallet:', walletAddress);
 
     if (!walletAddress) {
       return res.status(400).json({
@@ -65,6 +66,7 @@ router.post('/authenticate', async (req, res) => {
   }
 });
 
+// SIGNUP route
 router.post('/signup', async (req, res) => {
   try {
     const { walletAddress, signature, nonce, email } = req.body;
@@ -77,17 +79,18 @@ router.post('/signup', async (req, res) => {
     }
 
     const additionalData = {};
-    if (email) {
-      additionalData.email = email;
-    }
+    if (email) additionalData.email = email;
 
     const result = await authService.signup(walletAddress, signature, nonce, additionalData);
 
+    // Return JSON response instead of redirect
     res.status(201).json(result);
+
   } catch (error) {
     res.status(400).json(authService.formatError(error, 400));
   }
 });
+
 
 router.post('/login', async (req, res) => {
   try {
@@ -102,7 +105,9 @@ router.post('/login', async (req, res) => {
 
     const result = await authService.login(walletAddress, signature, nonce);
 
+    // Return JSON response instead of redirect
     res.json(result);
+    
   } catch (error) {
     res.status(401).json(authService.formatError(error, 401));
   }
@@ -150,11 +155,21 @@ router.post('/logout', authenticateToken, async (req, res) => {
 router.post('/create-account', async (req, res) => {
   try {
     const { walletAddress, signature, nonce, userProfile } = req.body;
+    console.log('👤 Create account request received for wallet:', walletAddress);
+    console.log('📋 Request body:', { walletAddress, signature: signature?.substring(0, 10) + '...', nonce, userProfile });
 
     if (!walletAddress || !signature || !nonce) {
       return res.status(400).json({
         success: false,
         message: 'Wallet address, signature, and nonce are required'
+      });
+    }
+
+    if (!accountService) {
+      console.error('❌ AccountService not initialized!');
+      return res.status(500).json({
+        success: false,
+        message: 'Authentication service not available'
       });
     }
 
@@ -165,10 +180,12 @@ router.post('/create-account', async (req, res) => {
       userProfile || {}
     );
 
+    console.log('✅ Account creation result:', { success: result.success, userId: result.data?.user?.id });
     const statusCode = result.data.isNewAccount ? 201 : 200;
     res.status(statusCode).json(result);
 
   } catch (error) {
+    console.error('❌ Create account error:', error.message);
     res.status(400).json(accountService.formatError(error, 400));
   }
 });
