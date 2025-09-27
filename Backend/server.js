@@ -10,6 +10,7 @@ const { router: authRouter, initializeAuthService } = require('./routes/auth');
 const basketRouter = require('./routes/baskets');
 const pricingRouter = require('./routes/pricing');
 const blockchainRouter = require('./routes/blockchain');
+const agentsRouter = require('./routes/agents');
 
 const User = require('./database/models/User');
 const Basket = require('./database/models/Basket');
@@ -101,6 +102,7 @@ app.use('/auth', authRouter);
 app.use('/api/baskets', basketRouter);
 app.use('/api/pricing', pricingRouter);
 app.use('/api/blockchain', blockchainRouter);
+app.use('/api/agents', agentsRouter);
 
 app.get('/health', (req, res) => {
   res.json({
@@ -179,6 +181,12 @@ app.use((req, res) => {
       'GET /api/baskets/:basketId',
       'POST /api/baskets/:basketId/invest',
       'POST /api/baskets/:basketId/purchase',
+
+      '# AI Agents',
+      'GET /api/agents/status',
+      'POST /api/agents/chat',
+      'POST /api/agents/quick-portfolio',
+      'GET /api/agents/recommendations/trending',
 
       '# Pricing & Market Data',
       'GET /api/pricing/token/:symbol',

@@ -5,6 +5,8 @@ const BasketService = require('./BasketService');
 const ClusterPurchaseService = require('./ClusterPurchaseService');
 const ContractService = require('./ContractService');
 const PricingService = require('./PricingService');
+const AgentService = require('./AgentService');
+const OneInchService = require('./OneInchService');
 
 module.exports = {
   BaseService,
@@ -13,5 +15,7 @@ module.exports = {
   BasketService,
   ClusterPurchaseService,
   ContractService,
-  PricingService
+  PricingService,
+  AgentService,
+  OneInchService
 };
