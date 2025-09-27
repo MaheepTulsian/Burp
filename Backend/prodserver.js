@@ -13,8 +13,8 @@ const PORT = process.env.PORT || 5001;
 const HOST = process.env.PROD_HOST || 'YOUR_SERVER_IP';
 
 // Allow overriding ssl paths via env, otherwise use default locations
-const KEY_PATH = process.env.SSL_KEY_PATH || '/opt/Burp/ssl/backend.key';
-const CERT_PATH = process.env.SSL_CERT_PATH || '/opt/Burp/ssl/backend.crt';
+const KEY_PATH = process.env.SSL_KEY_PATH || '/home/ubuntu/ssl/key.pem';
+const CERT_PATH = process.env.SSL_CERT_PATH || '/home/ubuntu/ssl/cert.pem';
 
 const readFileSafe = (p) => {
   try {
