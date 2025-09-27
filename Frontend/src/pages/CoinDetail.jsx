@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
 import * as Web3Icons from "@web3icons/react";
 
-const API_BASE_URL = "http://82.177.167.168";
+const API_BASE_URL = "https://burp.contactsushil.me";
 
 const ClusterDetail = () => {
   const { id } = useParams();

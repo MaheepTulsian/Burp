@@ -18,7 +18,7 @@ const Dashboard = () => {
       try {
         setLoading(true);
 
-        const apiBase = 'http://82.177.167.168';
+        const apiBase = 'https://burp.contactsushil.me';
         const url = `${apiBase}/api/baskets/public/clusters?limit=20`;
 
         const resp = await fetch(url, {

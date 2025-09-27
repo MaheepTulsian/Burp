@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = 'https://burp.contactsushil.me';
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
