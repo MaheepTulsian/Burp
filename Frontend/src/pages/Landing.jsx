@@ -82,7 +82,7 @@ const Landing = () => {
         animate="visible"
         className="relative z-10 px-6 py-24"
       >
-        <div className="max-w-7xl mx-auto text-center">
+        <div className="max-w-7xl mx-auto text-center h-screen">
           {/* Premium Badge */}
           <motion.div
             variants={itemVariants}
@@ -99,7 +99,7 @@ const Landing = () => {
           >
             Blockchain Unified
             <br />
-            <span className="bg-gradient-to-r from-gold to-gold-dark bg-clip-text text-transparent">Rebalancing Platform</span>
+            <span className="bg-gradient-to-r from-gold to-gold-dark bg-clip-text ">Rebalancing Platform</span>
           </motion.h1>
 
           {/* Subtitle */}
@@ -189,7 +189,6 @@ const Landing = () => {
           </motion.div>
         </div>
       </motion.main>
-      <HumanoidSection/>
       {/* Premium Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-60 -right-60 w-96 h-96 bg-gold opacity-10 rounded-full blur-3xl animate-pulse"></div>

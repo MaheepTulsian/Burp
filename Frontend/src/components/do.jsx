@@ -9,11 +9,12 @@ const HumanoidSection = () => {
   const lastScrollY = useRef(0);
 
   const cardStyle = {
-    height: '60vh',
-    maxHeight: '600px',
-    borderRadius: '20px',
-    transition: 'transform 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.5s cubic-bezier(0.19, 1, 0.22, 1)',
-    willChange: 'transform, opacity'
+    height: "60vh",
+    maxHeight: "600px",
+    borderRadius: "20px",
+    transition:
+      "transform 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.5s cubic-bezier(0.19, 1, 0.22, 1)",
+    willChange: "transform, opacity",
   };
 
   useEffect(() => {
@@ -42,7 +43,10 @@ const HumanoidSection = () => {
 
           let progress = 0;
           if (sectionRect.top <= 0) {
-            progress = Math.min(1, Math.max(0, Math.abs(sectionRect.top) / totalScrollDistance));
+            progress = Math.min(
+              1,
+              Math.max(0, Math.abs(sectionRect.top) / totalScrollDistance)
+            );
           }
 
           if (progress >= 0.66) {
@@ -60,11 +64,11 @@ const HumanoidSection = () => {
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
       if (sectionRef.current) {
         observer.unobserve(sectionRef.current);
       }
@@ -76,137 +80,172 @@ const HumanoidSection = () => {
   const isThirdCardVisible = activeCardIndex >= 2;
 
   return (
-    <div 
-      ref={sectionRef} 
-      className="relative" 
-      style={{ height: '300vh' }}
-    >
-      <section className="w-full h-screen py-10 md:py-16 sticky top-0 overflow-hidden bg-white" id="why-humanoid">
-        <div className="container px-6 lg:px-8 mx-auto h-full flex flex-col">
-          <div className="mb-2 md:mb-3">
-            <div className="flex items-center gap-4 mb-2 md:mb-2 pt-8 sm:pt-6 md:pt-4">
-              <div className="pulse-chip opacity-0 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-pulse-500 text-white mr-2">02</span>
-                <span>Burp</span>
-              </div>
-            </div>
+    // <div ref={sectionRef} className="relative" style={{ height: "300vh" }}>
+    //   <section
+    //     className="w-full h-screen py-10 md:py-16 sticky top-0 overflow-hidden bg-white"
+    //     id="why-humanoid"
+    //   >
+    //     <div className="container px-6 lg:px-8 mx-auto h-full flex flex-col">
+    //       {/* Section Header */}
+    //       <div className="mb-2 md:mb-3">
+    //         <div className="flex items-center gap-4 mb-2 pt-8">
+    //           <div className="pulse-chip opacity-0 animate-fade-in">
+    //             <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-pulse-500 text-white mr-2">
+    //               02
+    //             </span>
+    //             <span>Burp</span>
+    //           </div>
+    //         </div>
+
+    //         <h2 className="section-title text-3xl sm:text-4xl md:text-5xl font-display font-bold mb-1 md:mb-2 [text-stroke:1px_black] text-transparent">
+    //           Why Use Burp
+    //         </h2>
+    //       </div>
+
+    //       {/* Cards */}
+    //       <div
+    //         ref={cardsContainerRef}
+    //         className="relative flex-1 perspective-1000"
+    //       >
+    //         {/* PYUSD Card */}
+    //         <div
+    //           className={`absolute inset-0 overflow-hidden shadow-2xl rounded-2xl ${
+    //             isFirstCardVisible ? "animate-card-enter" : ""
+    //           }`}
+    //           style={{
+    //             ...cardStyle,
+    //             zIndex: 10,
+    //             transform: `translateY(${
+    //               isFirstCardVisible ? "90px" : "200px"
+    //             }) scale(0.9)`,
+    //             opacity: isFirstCardVisible ? 0.95 : 0,
+    //             background:
+    //               "linear-gradient(135deg, #4A6FA5 0%, #A9B0B9 100%)", // blue + grey
+    //           }}
+    //         >
+    //           {/* Badge */}
+    //           <div className="absolute top-4 right-4 z-20">
+    //             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 shadow-md text-white">
+    //               <img src="/logos/pyusd.svg" alt="PYUSD" className="w-6 h-6" />
+    //               <span className="text-sm font-semibold tracking-wide">
+    //                 PYUSD
+    //               </span>
+    //             </div>
+    //           </div>
+
+    //           {/* Text */}
+    //           <div className="relative z-10 p-6 md:p-8 h-full flex items-center">
+    //             <div className="max-w-lg">
+    //               <h3 className="text-3xl md:text-4xl font-display font-bold leading-tight mb-4">
+    //                 <span className=" [text-stroke:1px_black]">
+    //                   Trust & Stability
+    //                 </span>{" "}
+    //                 with <span className="text-blue-200">PYUSD</span>
+    //               </h3>
+    //             </div>
+    //           </div>
+    //         </div>
+
+    //         {/* Fluence Card */}
             
-            <h2 className="section-title text-3xl sm:text-4xl md:text-5xl font-display font-bold mb-1 md:mb-2">
-              Why Use Burp
-            </h2>
-          </div>
-          
-          <div ref={cardsContainerRef} className="relative flex-1 perspective-1000">
-            {/* First Card */}
-            <div 
-              className={`absolute inset-0 overflow-hidden bg-green-300 shadow-xl ${isFirstCardVisible ? 'animate-card-enter' : ''}`} 
-              style={{
-                ...cardStyle,
-                zIndex: 10,
-                transform: `translateY(${isFirstCardVisible ? '90px' : '200px'}) scale(0.9)`,
-                opacity: isFirstCardVisible ? 0.9 : 0
-              }}
-            >
-              <div
-                className="absolute inset-0 z-0 bg-gradient-to-b from-pulse-900/40 to-dark-900/80"
-                style={{
-                  backgroundImage: "url('/background-section1.png')",
-                  backgroundSize: "cover",
-                  backgroundPosition: "top center",
-                  backgroundBlendMode: "overlay"
-                }}
-              ></div>
-              
-              <div className="absolute top-4 right-4 z-20">
-                <div className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white">
-                  <span className="text-sm font-medium">The vision</span>
-                </div>
-              </div>
-              
-              <div className="relative z-10 p-5 sm:p-6 md:p-8 h-full flex items-center">
-                <div className="max-w-lg">
-                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-display text-white font-bold leading-tight mb-4">
-                    We're giving AI a way to navigate the physical world
-                  </h3>
-                </div>
-              </div>
-            </div>
-            
-            {/* Second Card */}
-            <div 
-              className={`absolute inset-0 overflow-hidden bg-pink-300 shadow-xl ${isSecondCardVisible ? 'animate-card-enter' : ''}`} 
-              style={{
-                ...cardStyle,
-                zIndex: 20,
-                transform: `translateY(${isSecondCardVisible ? activeCardIndex === 1 ? '55px' : '45px' : '200px'}) scale(0.95)`,
-                opacity: isSecondCardVisible ? 1 : 0,
-                pointerEvents: isSecondCardVisible ? 'auto' : 'none'
-              }}
-            >
-              <div
-                className="absolute inset-0 z-0 bg-gradient-to-b from-pulse-900/40 to-dark-900/80"
-                style={{
-                  backgroundImage: "url('/background-section2.png')",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  backgroundBlendMode: "overlay"
-                }}
-              ></div>
-              
-              <div className="absolute top-4 right-4 z-20">
-                <div className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white">
-                  <span className="text-sm font-medium">The vision</span>
-                </div>
-              </div>
-              
-              <div className="relative z-10 p-5 sm:p-6 md:p-8 h-full flex items-center">
-                <div className="max-w-lg">
-                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-display text-white font-bold leading-tight mb-4">
-                    We're bringing adaptive intelligence to where humans work
-                  </h3>
-                </div>
-              </div>
-            </div>
-            
-            {/* Third Card */}
-            <div 
-              className={`absolute inset-0 overflow-hidden bg-blue-300 shadow-xl ${isThirdCardVisible ? 'animate-card-enter' : ''}`} 
-              style={{
-                ...cardStyle,
-                zIndex: 30,
-                transform: `translateY(${isThirdCardVisible ? activeCardIndex === 2 ? '15px' : '0' : '200px'}) scale(1)`,
-                opacity: isThirdCardVisible ? 1 : 0,
-                pointerEvents: isThirdCardVisible ? 'auto' : 'none'
-              }}
-            >
-              <div
-                className="absolute inset-0 z-0 bg-gradient-to-b from-pulse-900/40 to-dark-900/80"
-                style={{
-                  backgroundImage: "url('/background-section3.png')",
-                  backgroundSize: "cover",
-                  backgroundPosition: "bottom center",
-                  backgroundBlendMode: "overlay"
-                }}
-              ></div>
-              
-              <div className="absolute top-4 right-4 z-20">
-                <div className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white">
-                  <span className="text-sm font-medium">The vision</span>
-                </div>
-              </div>
-              
-              <div className="relative z-10 p-5 sm:p-6 md:p-8 h-full flex items-center">
-                <div className="max-w-lg">
-                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-display text-white font-bold leading-tight mb-4">
-                    We're creating companions, <span className="text-[#FC4D0A]">not replacements</span>
-                  </h3>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
+
+    //         {/* Self Card */}
+    //         <div
+    //           className={`absolute inset-0 overflow-hidden shadow-2xl rounded-2xl ${
+    //             isThirdCardVisible ? "animate-card-enter" : ""
+    //           }`}
+    //           style={{
+    //             ...cardStyle,
+    //             zIndex: 30,
+    //             transform: `translateY(${
+    //               isThirdCardVisible
+    //                 ? activeCardIndex === 2
+    //                   ? "15px"
+    //                   : "0"
+    //                 : "200px"
+    //             }) scale(1)`,
+    //             opacity: isThirdCardVisible ? 1 : 0,
+    //             pointerEvents: isThirdCardVisible ? "auto" : "none",
+    //             background:
+    //               "linear-gradient(135deg, #FFD700 0%, #FFF5CC 100%)", // gold + white
+    //           }}
+    //         >
+    //           {/* Badge */}
+    //           <div className="absolute top-4 right-4 z-20">
+    //             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/30 backdrop-blur-sm border border-yellow-200/50 shadow-md text-yellow-900">
+    //               <img src="/logos/self.svg" alt="Self" className="w-6 h-6" />
+    //               <span className="text-sm font-semibold tracking-wide">
+    //                 Self
+    //               </span>
+    //             </div>
+    //           </div>
+
+    //           {/* Text */}
+    //           <div className="relative z-10 p-6 md:p-8 h-full flex items-center">
+    //             <div className="max-w-lg">
+    //               <h3 className="text-3xl md:text-4xl font-display font-bold leading-tight mb-4">
+    //                 <span className=" [text-stroke:1px_black]">
+    //                   Unlocking Self-Sovereign Identity
+    //                 </span>{" "}
+    //                 & Ownership
+    //               </h3>
+    //             </div>
+    //           </div>
+    //         </div>
+    //         {/* -------------------- */}
+
+    //         <div
+    //           className={`absolute inset-0 overflow-hidden shadow-2xl rounded-2xl ${
+    //             isSecondCardVisible ? "animate-card-enter" : ""
+    //           }`}
+    //           style={{
+    //             ...cardStyle,
+    //             zIndex: 20,
+    //             transform: `translateY(${
+    //               isSecondCardVisible
+    //                 ? activeCardIndex === 1
+    //                   ? "55px"
+    //                   : "45px"
+    //                 : "200px"
+    //             }) scale(0.95)`,
+    //             opacity: isSecondCardVisible ? 1 : 0,
+    //             pointerEvents: isSecondCardVisible ? "auto" : "none",
+    //             background:
+    //               "linear-gradient(135deg, #000000 0%, #434343 50%, #B0B0B0 100%)", // black to silver
+    //           }}
+    //         >
+    //           {/* Badge */}
+    //           <div className="absolute top-4 right-4 z-20">
+    //             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 shadow-md text-white">
+    //               <img
+    //                 src="/logos/fluence.svg"
+    //                 alt="Fluence"
+    //                 className="w-6 h-6"
+    //               />
+    //               <span className="text-sm font-semibold tracking-wide">
+    //                 Fluence
+    //               </span>
+    //             </div>
+    //           </div>
+
+    //           {/* Text */}
+    //           <div className="relative z-10 p-6 md:p-8 h-full flex items-center">
+    //             <div className="max-w-lg">
+    //               <h3 className="text-3xl md:text-4xl font-display font-bold leading-tight mb-4">
+    //                 <span className=" [text-stroke:3px_white]">
+    //                   Powering Decentralized AI
+    //                 </span>{" "}
+    //                 with <span className="text-gray-200">Fluence</span>
+    //               </h3>
+    //             </div>
+    //           </div>
+    //         </div>
+    //       </div>
+    //     </div>
+    //   </section>
+    // </div>
+    <>
+    </>
   );
 };
 
