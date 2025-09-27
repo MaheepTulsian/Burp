@@ -63,10 +63,9 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold text-foreground mb-4">Integrations</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-muted-foreground hover:text-cta transition-colors duration-300">Pyth Network</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-cta transition-colors duration-300">1inch Protocol</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-cta transition-colors duration-300">Self Protocol</a></li>
               <li><a href="#" className="text-muted-foreground hover:text-cta transition-colors duration-300">PYUSD</a></li>
+              <li><a href="#" className="text-muted-foreground hover:text-cta transition-colors duration-300">Self Protocol</a></li>
+              <li><a href="#" className="text-muted-foreground hover:text-cta transition-colors duration-300">Fluence</a></li>
             </ul>
           </div>
         </div>
