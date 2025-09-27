@@ -336,7 +336,7 @@ const Login = ({ onLogin }) => {
                   {!connected ? (
                     <motion.button
                       onClick={openConnectModal}
-                      className="w-full p-4 bg-gradient-to-r from-cta to-cta-hover text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
+                      className="w-full p-4 bg-gradient-to-r from-cta to-cta-hover text-black border font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >

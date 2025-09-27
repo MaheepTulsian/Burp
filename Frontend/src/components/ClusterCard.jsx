@@ -112,22 +112,7 @@ const ClusterCard = ({ cluster, onClick }) => {
         <p className="text-muted-foreground mb-8 leading-relaxed text-lg">{cluster.description}</p>
         
         {/* Premium Stats Grid */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-gradient-to-br from-gold-light to-gold p-4 rounded-2xl border border-gold shadow-md">
-            <div className="text-xs font-medium text-foreground opacity-80 mb-1">Total Value</div>
-            <div className="font-bold text-foreground text-lg">{cluster.stats.totalValue}</div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-gold-light to-gold p-4 rounded-2xl border border-gold shadow-md">
-            <div className="text-xs font-medium text-foreground opacity-80 mb-1">APY</div>
-            <div className="font-bold text-green-700 text-lg">{cluster.stats.apy}</div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-gold-light to-gold p-4 rounded-2xl border border-gold shadow-md">
-            <div className="text-xs font-medium text-foreground opacity-80 mb-1">Assets</div>
-            <div className="font-bold text-foreground text-lg">{cluster.stats.tokens}</div>
-          </div>
-        </div>
+        
       </div>
 
       {/* Premium CTA */}

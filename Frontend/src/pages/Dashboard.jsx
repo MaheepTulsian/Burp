@@ -115,31 +115,7 @@ const Dashboard = () => {
           </p>
         </motion.div>
 
-        {/* Portfolio Overview */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="grid md:grid-cols-3 gap-6 mb-12"
-        >
-          <div className="card-gradient rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-muted-foreground mb-2">Total Portfolio Value</h3>
-            <p className="text-3xl font-bold text-foreground">$12,847.32</p>
-            <p className="text-green-600 text-sm mt-1">+8.2% (24h)</p>
-          </div>
-          
-          <div className="card-gradient rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-muted-foreground mb-2">Active Clusters</h3>
-            <p className="text-3xl font-bold text-foreground">3</p>
-            <p className="text-cta text-sm mt-1">2 outperforming market</p>
-          </div>
-          
-          <div className="card-gradient rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-muted-foreground mb-2">Average APY</h3>
-            <p className="text-3xl font-bold text-foreground">15.1%</p>
-            <p className="text-green-600 text-sm mt-1">Above market average</p>
-          </div>
-        </motion.div>
+        
 
         {/* Clusters Grid */}
         <motion.div
@@ -196,26 +172,7 @@ const Dashboard = () => {
           </motion.div>
         </motion.div>
 
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="mt-16 text-center"
-        >
-          <h2 className="text-2xl font-bold text-foreground mb-6">Quick Actions</h2>
-          <div className="flex flex-wrap justify-center gap-4">
-            <button className="px-6 py-3 bg-secondary hover:bg-accent text-secondary-foreground rounded-xl font-medium transition-colors duration-300">
-              View All Transactions
-            </button>
-            <button className="px-6 py-3 bg-secondary hover:bg-accent text-secondary-foreground rounded-xl font-medium transition-colors duration-300">
-              Portfolio Analytics
-            </button>
-            <button className="px-6 py-3 bg-secondary hover:bg-accent text-secondary-foreground rounded-xl font-medium transition-colors duration-300">
-              Rebalancing History
-            </button>
-          </div>
-        </motion.div>
+        
       </div>
     </div>
   );

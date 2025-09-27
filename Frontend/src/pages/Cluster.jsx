@@ -489,7 +489,7 @@ const Cluster = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="max-w-4xl mx-auto px-6 py-8"
+            className="max-w-6xl max-h-7xl mx-auto h-screen"
           >
             {console.log('💬 Rendering chat phase')}
             
