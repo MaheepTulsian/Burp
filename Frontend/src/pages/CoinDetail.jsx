@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
+import * as Web3Icons from "@web3icons/react";
 
 const API_BASE_URL = "http://localhost:5001";
 
@@ -73,13 +74,19 @@ const ClusterDetail = () => {
     );
   }
 
-  const calculateTotalReturn = () => {
-    if (!clusterData.performance?.returns) return "0.00";
-    const returns = clusterData.performance.returns;
+  const getTokenIcon = (symbol) => {
+    const iconName = `Token${symbol.toUpperCase()}`;
+    const IconComponent = Web3Icons[iconName];
+
+    if (IconComponent) {
+      return <IconComponent className="w-10 h-10 rounded" variant="background" />;
+    }
+
+    // Fallback to symbol text if icon not found
     return (
-      ((returns.daily || 0) +
-        (returns.weekly || 0) +
-        (returns.monthly || 0)).toFixed(2)
+      <div className="w-10 h-10 bg-gradient-to-br from-primary/80 to-primary/50 rounded-lg flex items-center justify-center text-white text-sm font-bold">
+        {symbol}
+      </div>
     );
   };
 
@@ -301,8 +308,8 @@ const ClusterDetail = () => {
         className="flex items-center justify-between p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300"
       >
         <div className="flex items-center space-x-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-primary/80 to-primary/50 rounded-2xl flex items-center justify-center shadow-inner text-white text-lg font-bold">
-            {token.symbol}
+          <div className="w-14 h-14 bg-gradient-to-br from-primary/80 to-primary/50 rounded-2xl flex items-center justify-center shadow-inner">
+            {getTokenIcon(token.symbol)}
           </div>
           <div>
             <h3 className="text-xl font-semibold text-white">{token.symbol}</h3>
