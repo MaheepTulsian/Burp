@@ -5,6 +5,9 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Import wallet provider
+import { WalletConnectProvider } from './components/WalletConnectProvider';
+
 // Import pages
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -24,10 +27,10 @@ const App = () => {
 
   // Check authentication status on app load
   useEffect(() => {
-    const authStatus = localStorage.getItem('burp_authenticated');
-    const userData = localStorage.getItem('burp_user');
-    
-    if (authStatus === 'true' && userData) {
+    const authToken = localStorage.getItem('burp_auth_token');
+    const userData = localStorage.getItem('burp_user_data');
+
+    if (authToken && userData) {
       setIsAuthenticated(true);
       setUser(JSON.parse(userData));
     }
@@ -37,86 +40,87 @@ const App = () => {
   const handleLogin = (userData) => {
     setIsAuthenticated(true);
     setUser(userData);
-    localStorage.setItem('burp_authenticated', 'true');
-    localStorage.setItem('burp_user', JSON.stringify(userData));
+    // Note: JWT token and user data are stored in Login.jsx during authentication
   };
 
   // Handle logout
   const handleLogout = () => {
     setIsAuthenticated(false);
     setUser(null);
-    localStorage.removeItem('burp_authenticated');
-    localStorage.removeItem('burp_user');
+    localStorage.removeItem('burp_auth_token');
+    localStorage.removeItem('burp_user_data');
   };
 
   return (
-    <Router>
-      <div className="min-h-screen bg-background">
-        {/* Navigation - only show on authenticated pages */}
-        {isAuthenticated && (
-          <Navbar user={user} onLogout={handleLogout} />
-        )}
-        
-        {/* Main content with smooth page transitions */}
-        <AnimatePresence mode="wait">
-          <Routes>
-            <Route 
-              path="/" 
-              element={
-                isAuthenticated ? 
-                <Navigate to="/dashboard" replace /> : 
-                <Landing />
-              } 
-            />
-            <Route 
-              path="/login" 
-              element={
-                isAuthenticated ? 
-                <Navigate to="/dashboard" replace /> : 
-                <Login onLogin={handleLogin} />
-              } 
-            />
-            <Route 
-              path="/dashboard" 
-              element={
-                isAuthenticated ? 
-                <Dashboard /> : 
-                <Navigate to="/login" replace />
-              } 
-            />
-            <Route 
-              path="/cluster/:id" 
-              element={
-                isAuthenticated ? 
-                <Cluster /> : 
-                <Navigate to="/login" replace />
-              } 
-            />
-            <Route 
-              path="/coin/:id" 
-              element={
-                isAuthenticated ? 
-                <CoinDetail /> : 
-                <Navigate to="/login" replace />
-              } 
-            />
-            <Route 
-              path="/cluster-info/:id" 
-              element={
-                isAuthenticated ? 
-                <ClusterInfo /> : 
-                <Navigate to="/login" replace />
-              } 
-            />
-            {/* Catch-all route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </AnimatePresence>
-        
-        {/* Footer - only show on public pages */}
-        {!isAuthenticated && <Footer />}
-      </div>
-    </Router>
+    <WalletConnectProvider>
+      <Router>
+        <div className="min-h-screen bg-background">
+          {/* Navigation - only show on authenticated pages */}
+          {isAuthenticated && (
+            <Navbar user={user} onLogout={handleLogout} />
+          )}
+
+          {/* Main content with smooth page transitions */}
+          <AnimatePresence mode="wait">
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  isAuthenticated ?
+                  <Navigate to="/dashboard" replace /> :
+                  <Landing />
+                }
+              />
+              <Route
+                path="/login"
+                element={
+                  isAuthenticated ?
+                  <Navigate to="/dashboard" replace /> :
+                  <Login onLogin={handleLogin} />
+                }
+              />
+              <Route
+                path="/dashboard"
+                element={
+                  isAuthenticated ?
+                  <Dashboard /> :
+                  <Navigate to="/login" replace />
+                }
+              />
+              <Route
+                path="/cluster/:id"
+                element={
+                  isAuthenticated ?
+                  <Cluster /> :
+                  <Navigate to="/login" replace />
+                }
+              />
+              <Route
+                path="/coin/:id"
+                element={
+                  isAuthenticated ?
+                  <CoinDetail /> :
+                  <Navigate to="/login" replace />
+                }
+              />
+              <Route
+                path="/cluster-info/:id"
+                element={
+                  isAuthenticated ?
+                  <ClusterInfo /> :
+                  <Navigate to="/login" replace />
+                }
+              />
+              {/* Catch-all route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </AnimatePresence>
+
+          {/* Footer - only show on public pages */}
+          {!isAuthenticated && <Footer />}
+        </div>
+      </Router>
+    </WalletConnectProvider>
   );
 };
 
