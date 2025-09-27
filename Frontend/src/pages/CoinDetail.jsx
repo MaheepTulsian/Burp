@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+const API_BASE_URL = 'http://localhost:5001';
 
 const ClusterDetail = () => {
   const { id } = useParams();
@@ -34,6 +34,7 @@ const ClusterDetail = () => {
 
         if (result.success) {
           setClusterData(result.data);
+          console.log(clusterData)
         } else {
           throw new Error(result.message || 'Failed to load cluster data');
         }

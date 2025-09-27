@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { mockApi } from '../mock/api';
+// Use real backend API for clusters
 import ClusterCard from '../components/ClusterCard';
 
 const Dashboard = () => {
@@ -12,13 +12,45 @@ const Dashboard = () => {
   const [clusters, setClusters] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Load clusters on component mount
+  // Load clusters on component mount (from backend)
   useEffect(() => {
     const loadClusters = async () => {
       try {
         setLoading(true);
-        const clustersData = await mockApi.getClusters();
-        setClusters(clustersData);
+
+        const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+        const url = `${apiBase}/api/baskets/public/clusters?limit=20`;
+
+        const resp = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!resp.ok) {
+          const text = await resp.text();
+          throw new Error(`Failed to fetch clusters: ${resp.status} ${text}`);
+        }
+
+        const payload = await resp.json();
+        const buckets = Array.isArray(payload?.data) ? payload.data : [];
+
+        // Map backend basket shape -> ClusterCard expected shape
+        const mapped = buckets.map(b => ({
+          id: b.id || b._id,
+          name: b.name || b.basketName || 'Unnamed Cluster',
+          description: b.description || b.portfolio_summary || '',
+          tokens: b.tokens || [],
+          stats: {
+            risk: (b.riskLevel || b.stats?.risk || 'moderate'),
+            totalValue: typeof b.totalValue === 'number' ? `$${b.totalValue.toLocaleString()}` : (b.totalValue || '$0'),
+            apy: b.performance?.yearly ? `${b.performance.yearly}%` : (b.aiMetadata?.expected_apy ? `${b.aiMetadata.expected_apy}%` : 'N/A'),
+            tokens: Array.isArray(b.tokens) ? b.tokens.length : (b.stats?.tokens || 0)
+          }
+        }));
+
+        setClusters(mapped);
       } catch (error) {
         console.error('Failed to load clusters:', error);
       } finally {
@@ -31,7 +63,8 @@ const Dashboard = () => {
 
   // Handle cluster selection
   const handleClusterClick = (clusterId) => {
-    navigate(`/cluster/${clusterId}`);
+    // Navigate to the detailed cluster view route (note: path uses 'clustor' to match App.jsx)
+    navigate(`/clustor/${clusterId}`);
   };
 
   // Animation variants
@@ -116,14 +149,24 @@ const Dashboard = () => {
           className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
           {/* Existing Clusters */}
-          {clusters.map((cluster) => (
-            <motion.div key={cluster.id} variants={itemVariants}>
-              <ClusterCard 
-                cluster={cluster}
-                onClick={() => handleClusterClick(cluster.id)}
-              />
+          {clusters.length === 0 ? (
+            <motion.div className="col-span-full" variants={itemVariants}>
+              <div className="cluster-card rounded-2xl p-8 h-full min-h-[300px] flex flex-col items-center justify-center text-center border border-dashed border-muted">
+                <h3 className="text-xl font-semibold text-foreground mb-2">No public clusters found</h3>
+                <p className="text-muted-foreground mb-4">Create a new cluster or try again later — our AI curates portfolios regularly.</p>
+                <button onClick={() => navigate('/cluster/create')} className="px-5 py-3 bg-primary text-primary-foreground rounded-lg font-medium">Create Cluster</button>
+              </div>
             </motion.div>
-          ))}
+          ) : (
+            clusters.map((cluster) => (
+              <motion.div key={cluster.id} variants={itemVariants}>
+                <ClusterCard 
+                  cluster={cluster}
+                  onClick={() => handleClusterClick(cluster.id)}
+                />
+              </motion.div>
+            ))
+          )}
 
           {/* Create Your Own Cluster Card */}
           
