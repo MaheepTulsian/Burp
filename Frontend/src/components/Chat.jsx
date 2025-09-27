@@ -123,16 +123,53 @@ const Chat = ({ messages, onUserDecision, onUserInput, showDecision, clusterName
                   </div>
                 )}
                 
-                <motion.div 
+                <motion.div
                   className={`rounded-3xl p-6 shadow-lg ${
-                    message.type === 'user' 
-                      ? 'bg-gradient-to-br from-gold to-gold-dark text-foreground ml-auto border-2 border-gold-dark' 
+                    message.type === 'user'
+                      ? 'bg-gradient-to-br from-gold to-gold-dark text-foreground ml-auto border-2 border-gold-dark'
                       : 'bg-gradient-to-br from-card to-primary-light text-foreground border-2 border-gold'
                   }`}
                   whileHover={{ scale: 1.02 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <p className="leading-relaxed text-lg font-medium">{message.message}</p>
+                  {/* Render message content, supporting simple Markdown from AI */}
+                  <div className="leading-relaxed text-lg font-medium">
+                    {message && typeof message.message === 'string' ? (
+                      <div
+                        dangerouslySetInnerHTML={{ __html: markdownToHtml(message.message) }}
+                      />
+                    ) : (
+                      <p className="leading-relaxed text-lg font-medium">{String(message.message)}</p>
+                    )}
+                  </div>
+
+                  {/* Show cluster ready button */}
+                  {message.isClusterReady && message.cluster && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                      className="mt-4 p-4 bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-2xl border border-gold"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-bold text-lg text-foreground">{message.cluster.name}</h4>
+                          <p className="text-sm text-muted-foreground">{message.cluster.subtitle}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {message.cluster.tokens.length} tokens • {message.cluster.riskLevel} risk
+                          </p>
+                        </div>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => onUserDecision('yes')}
+                          className="px-6 py-3 bg-gradient-to-r from-gold to-gold-dark text-foreground rounded-xl font-bold shadow-lg border-2 border-gold-dark"
+                        >
+                          ✨ Show Cluster
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )}
                 </motion.div>
                 
                 {message.type === 'user' && (
@@ -280,6 +317,56 @@ function getAdvisorTitle() {
 
 function getDecisionPrompt() {
   return "Ready to proceed with this premium investment opportunity?";
+}
+
+// Minimal markdown renderer (safe): converts a subset of Markdown to HTML.
+// Escapes HTML first, then converts code blocks, inline code, bold, italics, links, and line breaks.
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function markdownToHtml(md) {
+  if (!md) return '';
+  // Escape first
+  let out = escapeHtml(md);
+
+  // Code block ```lang\n...```
+  out = out.replace(/```([\s\S]*?)```/g, (m, code) => {
+    const escaped = escapeHtml(code);
+    return `<pre class="rounded-md bg-black/70 p-3 overflow-auto text-sm"><code>${escaped}</code></pre>`;
+  });
+
+  // Inline code `code`
+  out = out.replace(/`([^`]+)`/g, (m, c) => `<code class="bg-black/10 px-1 rounded">${c}</code>`);
+
+  // Bold **text** or __text__
+  out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  out = out.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+
+  // Italic *text* or _text_
+  out = out.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  out = out.replace(/_([^_]+)_/g, '<em>$1</em>');
+
+  // Links [text](url)
+  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, text, url) => {
+    const safeUrl = escapeHtml(url);
+    const safeText = text;
+    return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-400 underline">${safeText}</a>`;
+  });
+
+  // Convert two or more newlines to paragraph breaks
+  out = out.replace(/\n{2,}/g, '</p><p>');
+
+  // Convert remaining single newlines to <br>
+  out = out.replace(/\n/g, '<br/>');
+
+  // Wrap in paragraph
+  return `<p>${out}</p>`;
 }
 
 export default Chat;

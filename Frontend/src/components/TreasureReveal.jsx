@@ -250,7 +250,7 @@ const TreasureReveal = ({ cluster, onComplete }) => {
                       className="w-12 h-12 bg-gradient-to-br from-gold to-gold-dark rounded-2xl flex items-center justify-center shadow-lg border-2 border-gold-light z-10"
                     >
                       <span className="text-foreground font-bold text-sm">
-                        {cluster.tokens[index]?.symbol.slice(0, 2) || '✨'}
+                        {cluster?.tokens?.[index]?.symbol?.slice(0, 2) || '✨'}
                       </span>
                     </motion.div>
                   </div>
@@ -348,30 +348,49 @@ const TreasureReveal = ({ cluster, onComplete }) => {
                   ease: "easeInOut"
                 }}
               >
-                {cluster.name} Unlocked!
+                {cluster?.name || 'Investment Cluster'} Unlocked!
               </motion.h2>
 
-              <motion.p className="text-xl text-muted-foreground mb-8">
-                Your AI-optimized portfolio is ready for investment
+              <motion.p className="text-xl text-muted-foreground mb-2">
+                {cluster?.subtitle || 'Your AI-optimized portfolio is ready for investment'}
               </motion.p>
 
-              {/* Token List */}
+              <motion.p className="text-sm text-muted-foreground mb-8">
+                {cluster?.tokens?.length || 0} tokens • {cluster?.riskLevel || 'Moderate'} risk • Expected: {cluster?.expectedReturn || '15-25%'}
+              </motion.p>
+
+              {/* Token List - Display tokens in descending order by allocation */}
               <motion.div
                 variants={tokenListVariants}
                 initial="hidden"
                 animate="visible"
-                className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8 max-w-4xl"
               >
-                {cluster.tokens.map((token, index) => (
+                {cluster?.tokens?.sort((a, b) => b.percentage - a.percentage).map((token, index) => (
                   <motion.div
                     key={token.symbol}
                     variants={tokenItemVariants}
-                    className="bg-card border border-card-border rounded-xl p-4 text-center hover:border-cta transition-colors duration-300"
+                    className="bg-gradient-to-br from-card to-primary-light border-2 border-gold rounded-xl p-4 text-center hover:border-gold-dark transition-all duration-300 hover:shadow-lg"
                   >
-                    <TokenBadge symbol={token.symbol} size="lg" className="mx-auto mb-2" />
-                    <h4 className="font-semibold text-foreground">{token.symbol}</h4>
-                    <p className="text-sm text-muted-foreground">{token.allocation}%</p>
-                    <p className="text-xs text-green-600 font-medium">{token.change}</p>
+                    <div className="relative">
+                      <div className="w-12 h-12 bg-gradient-to-br from-gold to-gold-dark rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg border-2 border-gold-light">
+                        <span className="text-foreground font-bold text-lg">
+                          {token.symbol?.slice(0, 2) || '??'}
+                        </span>
+                      </div>
+                      {index === 0 && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
+                          <span className="text-white text-xs font-bold">1</span>
+                        </div>
+                      )}
+                    </div>
+                    <h4 className="font-bold text-foreground text-lg">{token.symbol}</h4>
+                    <p className="text-sm text-muted-foreground mb-1">{token.name}</p>
+                    <p className="text-lg font-bold text-gold">{token.percentage}%</p>
+                    <p className="text-xs text-muted-foreground mt-2 leading-tight">
+                      {token.rationale?.slice(0, 50) || 'Investment allocation'}
+                      {token.rationale?.length > 50 && '...'}
+                    </p>
                   </motion.div>
                 ))}
               </motion.div>

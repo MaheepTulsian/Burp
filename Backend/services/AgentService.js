@@ -48,25 +48,44 @@ class AgentService extends BaseService {
 
   async generatePortfolio(userProfile) {
     try {
+      console.log('🎯 [AgentService] generatePortfolio called with profile:', userProfile.collected_info);
+
       if (!this.openaiApiKey) {
-        return this.formatError(new Error('OpenAI API key not configured'), 400);
+        console.warn('⚠️ [AgentService] OpenAI API key not configured, using fallback portfolio');
+        return this.generateFallbackPortfolio(userProfile);
       }
 
       const tokensData = await this.getTokensWhitelist();
+      console.log('📊 [AgentService] Token whitelist loaded:', tokensData.length, 'tokens');
 
-      const portfolio = await this.constructPortfolioFromProfile(userProfile, tokensData);
+      // Use Agent2 for portfolio construction
+      const portfolio = await this.callAgent2(userProfile, tokensData);
+      console.log('🤖 [AgentService] Agent2 portfolio result:', {
+        success: !!portfolio,
+        tokenCount: portfolio?.selected_tokens?.length || 0
+      });
 
-      return this.formatSuccess({
-        status: "portfolio_complete",
-        user_profile: userProfile,
-        selected_tokens: portfolio.tokens,
-        portfolio_summary: portfolio.summary,
-        risk_analysis: portfolio.riskAnalysis,
-        generated_at: new Date().toISOString()
-      }, 'Portfolio generated successfully');
+      if (portfolio) {
+        return this.formatSuccess({
+          status: "portfolio_complete",
+          user_profile: userProfile,
+          selected_tokens: portfolio.selected_tokens,
+          portfolio_summary: portfolio.portfolio_summary,
+          risk_analysis: {
+            overall_risk: userProfile.collected_info.risk_tolerance,
+            diversification_score: this.calculateDiversificationScore(portfolio.selected_tokens),
+            volatility_estimate: this.estimatePortfolioVolatility(portfolio.selected_tokens)
+          },
+          generated_at: new Date().toISOString()
+        }, 'Portfolio generated successfully');
+      } else {
+        console.warn('⚠️ [AgentService] Agent2 failed, using fallback');
+        return this.generateFallbackPortfolio(userProfile);
+      }
 
     } catch (error) {
-      return this.formatError(error, 500, 'Failed to generate portfolio');
+      console.error('❌ [AgentService] Portfolio generation error:', error.message);
+      return this.generateFallbackPortfolio(userProfile);
     }
   }
 
@@ -291,7 +310,7 @@ class AgentService extends BaseService {
     }
   }
 
-  async processUserChat(chatMessage, conversationHistory = []) {
+  async processUserChat(chatMessage, conversationHistory = [], userContext = null) {
     try {
       console.log('\n🧠 [AgentService] Processing user chat');
       console.log('💬 [AgentService] Input message:', chatMessage?.slice(0, 200) + (chatMessage?.length > 200 ? '...' : ''));
@@ -530,6 +549,88 @@ Start the conversation by introducing yourself and beginning with Step 1.
       { theme: 'Gaming & Metaverse', description: 'Virtual worlds and blockchain gaming tokens', risk: 7 },
       { theme: 'Stable & Yield', description: 'Stablecoins and yield-generating assets', risk: 2 }
     ];
+  }
+
+  async callAgent2(userProfile, tokensData) {
+    try {
+      console.log('🤖 [AgentService] Calling Agent2 for cluster construction');
+
+      // Import and use the actual Agent2
+      const { createCluster } = require('../Agents/agent2.js');
+
+      const clusterResult = await createCluster(userProfile, tokensData);
+
+      if (clusterResult && clusterResult.selected_tokens) {
+        console.log('✅ [AgentService] Agent2 cluster created successfully');
+
+        // Return in expected format for AgentService
+        return {
+          selected_tokens: clusterResult.selected_tokens,
+          portfolio_summary: clusterResult.summary || clusterResult.cluster?.description || 'AI-generated cluster',
+          cluster: clusterResult.cluster,
+          user_profile: clusterResult.user_profile
+        };
+      }
+
+      console.warn('⚠️ [AgentService] Agent2 returned invalid result');
+      return null;
+
+    } catch (error) {
+      console.error('❌ [AgentService] Agent2 error:', error.message);
+      return null;
+    }
+  }
+
+  generateFallbackPortfolio(userProfile) {
+    console.log('🔄 [AgentService] Generating fallback portfolio');
+
+    const theme = userProfile.collected_info.investment_theme;
+    const riskTolerance = userProfile.collected_info.risk_tolerance;
+
+    // Create a basic fallback portfolio based on risk tolerance
+    let selectedTokens;
+    if (riskTolerance <= 3) {
+      // Conservative portfolio
+      selectedTokens = [
+        { symbol: 'BTC', name: 'Bitcoin', allocation: 40, rationale: 'Digital gold and store of value' },
+        { symbol: 'ETH', name: 'Ethereum', allocation: 30, rationale: 'Leading smart contract platform' },
+        { symbol: 'USDC', name: 'USD Coin', allocation: 20, rationale: 'Stable value preservation' },
+        { symbol: 'USDT', name: 'Tether', allocation: 10, rationale: 'Liquidity and stability' }
+      ];
+    } else if (riskTolerance <= 7) {
+      // Moderate portfolio
+      selectedTokens = [
+        { symbol: 'BTC', name: 'Bitcoin', allocation: 30, rationale: 'Digital gold and store of value' },
+        { symbol: 'ETH', name: 'Ethereum', allocation: 25, rationale: 'Smart contract platform leader' },
+        { symbol: 'SOL', name: 'Solana', allocation: 15, rationale: 'High-performance blockchain' },
+        { symbol: 'AVAX', name: 'Avalanche', allocation: 15, rationale: 'Scalable DeFi platform' },
+        { symbol: 'USDC', name: 'USD Coin', allocation: 15, rationale: 'Stability and liquidity' }
+      ];
+    } else {
+      // Aggressive portfolio
+      selectedTokens = [
+        { symbol: 'ETH', name: 'Ethereum', allocation: 25, rationale: 'Smart contract innovation' },
+        { symbol: 'SOL', name: 'Solana', allocation: 20, rationale: 'High-performance ecosystem' },
+        { symbol: 'AVAX', name: 'Avalanche', allocation: 15, rationale: 'Scalable infrastructure' },
+        { symbol: 'MATIC', name: 'Polygon', allocation: 15, rationale: 'Ethereum scaling solution' },
+        { symbol: 'UNI', name: 'Uniswap', allocation: 12, rationale: 'Leading DEX protocol' },
+        { symbol: 'AAVE', name: 'Aave', allocation: 8, rationale: 'DeFi lending leader' },
+        { symbol: 'BTC', name: 'Bitcoin', allocation: 5, rationale: 'Portfolio anchor' }
+      ];
+    }
+
+    return this.formatSuccess({
+      status: "portfolio_complete",
+      user_profile: userProfile,
+      selected_tokens: selectedTokens,
+      portfolio_summary: `Fallback ${selectedTokens.length}-token portfolio focusing on ${theme} with ${riskTolerance}/10 risk tolerance`,
+      risk_analysis: {
+        overall_risk: riskTolerance,
+        diversification_score: selectedTokens.length,
+        volatility_estimate: `${30 + riskTolerance * 10}% annually`
+      },
+      generated_at: new Date().toISOString()
+    }, 'Fallback portfolio generated successfully');
   }
 }
 

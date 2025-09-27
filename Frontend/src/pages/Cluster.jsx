@@ -276,35 +276,49 @@ const Cluster = () => {
     if (aiResponse.isComplete) {
       console.log('✅ Conversation marked as complete, setting up cluster creation');
       setChatComplete(true);
-      
+
       // Create cluster from portfolio data
       if (aiResponse.portfolio && aiResponse.portfolio.selected_tokens) {
         console.log('💼 Creating cluster from portfolio data:', aiResponse.portfolio);
-        
+
+        const clusterInfo = aiResponse.portfolio.cluster || {};
         const newCluster = {
-          id: 'ai-cluster-' + Date.now(),
-          name: userProfile?.collected_info.investment_theme || 'AI Investment Cluster',
-          description: aiResponse.portfolio.portfolio_summary || 'AI-generated investment portfolio',
+          id: aiResponse.portfolio.basket_id || 'ai-cluster-' + Date.now(),
+          name: clusterInfo.title || userProfile?.collected_info.investment_theme || 'AI Investment Cluster',
+          subtitle: clusterInfo.subtitle || 'AI-powered investment strategy',
+          description: clusterInfo.description || aiResponse.portfolio.portfolio_summary || 'AI-generated investment portfolio',
           tokens: aiResponse.portfolio.selected_tokens.map(token => ({
             symbol: token.symbol,
             percentage: token.allocation,
             name: token.name || token.symbol,
             rationale: token.rationale
           })),
-          expectedReturn: calculateExpectedReturn(userProfile?.collected_info.risk_tolerance || 5),
-          riskLevel: mapRiskLevel(userProfile?.collected_info.risk_tolerance || 5),
+          expectedReturn: clusterInfo.expected_return || calculateExpectedReturn(userProfile?.collected_info.risk_tolerance || 5),
+          riskLevel: clusterInfo.risk_level || mapRiskLevel(userProfile?.collected_info.risk_tolerance || 5),
           minInvestment: getMinInvestment(),
           totalValue: generateTotalValue(),
           aiGenerated: true,
-          userProfile: userProfile
+          userProfile: userProfile,
+          basketSaved: aiResponse.portfolio.basket_saved || false
         };
-        
+
         console.log('🎯 Generated cluster object:', newCluster);
-        
-        setTimeout(() => {
-          console.log('⏰ Setting cluster after timeout');
-          setCluster(newCluster);
-        }, 1000);
+
+        // Set cluster immediately for the ready state
+        setCluster(newCluster);
+
+        // Add final message to chat showing cluster is ready
+        const clusterReadyMsg = {
+          id: chatMessages.length + 3,
+          type: 'bot',
+          message: `🎉 Your "${newCluster.name}" cluster is ready! This ${newCluster.tokens.length}-token portfolio has been optimized for your investment preferences.`,
+          timestamp: Date.now(),
+          isSystem: true,
+          isClusterReady: true,
+          cluster: newCluster
+        };
+
+        setChatMessages(prev => [...prev, clusterReadyMsg]);
       } else {
         console.warn('⚠️ No portfolio data available for cluster creation');
       }

@@ -160,7 +160,60 @@ router.post('/chat/public', async (req, res) => {
       });
     }
 
-    const result = await agentService.processUserChat(message, conversationHistory || []);
+    // Pass user context for basket saving
+    const userContext = req.user ? {
+      walletAddress: req.user.walletAddress,
+      id: req.user.id
+    } : null;
+
+    const result = await agentService.processUserChat(message, conversationHistory || [], userContext);
+
+    // If portfolio is complete and we have a cluster, save it as a basket
+    if (result.success && result.data.is_complete && result.data.portfolio && userContext) {
+      try {
+        console.log('💾 [agents/chat] Saving cluster as basket...');
+
+        const portfolio = result.data.portfolio;
+        const clusterData = portfolio.cluster;
+
+        if (clusterData && portfolio.selected_tokens) {
+          const basketData = {
+            basketName: clusterData.title || `AI Cluster - ${result.data.user_analysis.collected_info.investment_theme}`,
+            tokens: portfolio.selected_tokens.map(token => ({
+              symbol: token.symbol,
+              address: generateTokenAddress(token.symbol),
+              weight: token.allocation,
+              name: token.name || token.symbol,
+              rationale: token.rationale
+            })),
+            description: clusterData.description || portfolio.portfolio_summary,
+            riskLevel: mapRiskLevel(result.data.user_analysis.collected_info.risk_tolerance),
+            category: 'ai-generated',
+            createdBy: userContext.walletAddress
+          };
+
+          const basketResult = await basketService.createAIBasket(basketData, {
+            model: 'Agent2-v1',
+            confidence: 0.9,
+            marketConditions: 'optimized',
+            generatedAt: new Date(),
+            userProfile: result.data.user_analysis.collected_info,
+            clusterInfo: clusterData
+          });
+
+          if (basketResult.success) {
+            console.log('✅ [agents/chat] Basket saved successfully:', basketResult.data.basketId);
+            result.data.portfolio.basket_id = basketResult.data.basketId;
+            result.data.portfolio.basket_saved = true;
+          } else {
+            console.error('❌ [agents/chat] Basket saving failed:', basketResult.message);
+          }
+        }
+      } catch (basketError) {
+        console.error('❌ [agents/chat] Error saving basket:', basketError.message);
+      }
+    }
+
     res.json(result);
 
   } catch (error) {
