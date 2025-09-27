@@ -47,6 +47,14 @@ class BaseService {
     };
   }
 
+  formatSuccess(data, message = 'Success') {
+    return {
+      success: true,
+      message,
+      data
+    };
+  }
+
   formatError(error, statusCode = 500) {
     return {
       success: false,
