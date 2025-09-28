@@ -4,7 +4,7 @@ This document explains the integration of PayPal USD (PYUSD) stablecoin and its 
 
 ## Integration Overview
 
-![PYUSD Trading Flow](https://placeholder-image-url.com/pyusd-trading-flow.png)
+![PYUSD Trading Flow](https://raw.githubusercontent.com/sushilpandeyy/Burp/refs/heads/main/Frontend/public/Screenshot%202025-09-28%20at%2010.29.02%E2%80%AFAM.png)
 
 ## PYUSD Implementation
 
