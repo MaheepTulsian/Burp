@@ -17,13 +17,11 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-2">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-cta rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">B</span>
-              </div>
-              <span className="text-2xl font-bold text-foreground">BURP</span>
+              
+              <span className="text-2xl font-bold text-foreground"> 🫧 BURP</span>
             </div>
             <p className="text-muted-foreground leading-relaxed mb-6">
-              Blockchain Unified Rebalancing Platform - Decentralized AI-powered crypto investment 
+               Decentralized AI-powered crypto investment 
               platform with AI-managed thematic baskets and best-execution trading.
             </p>
             <div className="flex space-x-4">
@@ -50,12 +48,12 @@ const Footer = () => {
 
           {/* Platform */}
           <div>
-            <h3 className="text-lg font-semibold text-foreground mb-4">Platform</h3>
+            {/* <h3 className="text-lg font-semibold text-foreground mb-4">Platform</h3> */}
             <ul className="space-y-2">
-              <li><a href="#" className="text-muted-foreground hover:text-cta transition-colors duration-300">Dashboard</a></li>
+              {/* <li><a href="#" className="text-muted-foreground hover:text-cta transition-colors duration-300">Dashboard</a></li>
               <li><a href="#" className="text-muted-foreground hover:text-cta transition-colors duration-300">Investment Clusters</a></li>
               <li><a href="#" className="text-muted-foreground hover:text-cta transition-colors duration-300">Portfolio Analytics</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-cta transition-colors duration-300">Rebalancing History</a></li>
+              <li><a href="#" className="text-muted-foreground hover:text-cta transition-colors duration-300">Rebalancing History</a></li> */}
             </ul>
           </div>
 
