@@ -49,6 +49,9 @@ BURP is **a platform to educate, guide, and simplify crypto investing**.
   Track **both stocks & crypto** in one place.  
   Familiar interface inspired by stock trading apps for a smooth transition.  
 
+![PYUSD Trading Flow](https://raw.githubusercontent.com/sushilpandeyy/Burp/refs/heads/main/Frontend/public/Screenshot%202025-09-28%20at%2010.29.02%E2%80%AFAM.png)
+
+
 ---
 
 ## 🎯 Outcomes
