@@ -1,33 +1,52 @@
 # Fluence VM Deployment Notes
 
-This document records what we deployed to the Fluence VM and how it is configured for production.
+This document records our deployment on Fluence VM and the basic configuration setup.
 
-- VM
-  - Ubuntu 22.04 LTS, 4 vCPUs, 8GB RAM, 50GB SSD (Fluence VM instance)
-  - Deployed via Terraform or Fluence Console; VM IP and ID assigned by Fluence
+## Deployment Architecture
 
-- Nginx
-  - Nginx acts as a reverse proxy for the frontend and backend.
-  - Frontend served from the VM at the site root; API requests are proxied to the backend under `/api`.
-  - Configured proxy_pass for the frontend and backend upstreams.
+![Fluence VM Deployment Flow](https://placeholder-image-url.com/deployment-flow.png)
 
-- SSL
-  - TLS handled with certbot / Let's Encrypt on the VM.
-  - Nginx configuration includes automatic certificate renewal hooks and redirects HTTP → HTTPS.
+## Infrastructure
 
-- Ports / Firewall
-  - Opened and configured ports: 80 (HTTP) and 443 (HTTPS) for public traffic.
-  - Backend listens on its internal port (default 5001). Only the proxy (nginx) exposes the service publicly.
-  - Additional service ports opened as required for monitoring or other services; all production-facing ports are behind nginx.
+### Fluence VM Instance
+- **VM Specs**: Ubuntu 22.04 LTS, 4 vCPUs, 8GB RAM, 50GB SSD
+- **Deployment**: Via Fluence Console or Terraform
+- **Network**: Static IP assigned by Fluence platform
 
-- Backend and Process Management
-  - Node/Express backend runs under a process manager (pm2 recommended) and binds to the internal port.
-  - Environment variables (DB URI, JWT secret, API keys) are kept in the VM's `.env` or a secure secret store.
+### Service Configuration
 
-- Deployment summary
-  - Frontend built and served through nginx; backend proxied via `/api` to Node process on the VM.
-  - SSL certificates installed and auto-renew configured.
-  - Firewall and nginx rules configured to expose only HTTP/HTTPS to the internet.
-  - Optionally deployed using Docker / docker-compose for containerized services.
+**Nginx (Reverse Proxy)**
+- Frontend served from root (`/`)
+- API requests proxied to backend via `/api`
+- SSL with Let's Encrypt certificates
+- HTTP to HTTPS redirect
 
-If you want, I can also add the exact `nginx` site config and the `systemd` / `pm2` commands used on the VM.
+**Backend Service**
+- Node.js/Express API running on port 5001 (internal)
+- Managed by PM2 process manager
+- Environment variables stored securely
+
+**Network & Security**
+- **Public Ports**: 80 (HTTP), 443 (HTTPS)
+- **Internal Port**: 5001 (backend API, proxied only)
+- Firewall configured to expose only HTTP/HTTPS
+
+## Deployment Flow
+
+1. **Provision Fluence VM** via Console/Terraform
+2. **Deploy application** code and dependencies
+3. **Configure Nginx** for reverse proxy and SSL
+4. **Start services** with PM2 process manager
+5. **Configure firewall** and security settings
+
+## Key Files
+
+```
+/etc/nginx/sites-available/default  # Nginx configuration
+/home/user/.env                     # Environment variables
+ecosystem.config.js                 # PM2 configuration
+```
+
+---
+
+*Deployed on Fluence VM platform for decentralized compute infrastructure*
