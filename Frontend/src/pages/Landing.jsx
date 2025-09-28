@@ -52,13 +52,8 @@ const Landing = () => {
             transition={{ duration: 0.6 }}
             className="flex items-center space-x-4"
           >
-            <motion.div 
-              className="w-12 h-12 bg-gradient-to-br from-gold to-gold-dark rounded-2xl flex items-center justify-center shadow-lg animate-glow"
-              whileHover={{ scale: 1.1 }}
-            >
-              <span className="text-foreground font-bold text-xl">B</span>
-            </motion.div>
-            <span className="text-3xl font-bold text-foreground tracking-wide">BURP</span>
+            
+            <span className="text-3xl font-bold text-foreground tracking-wide">BURP 🫧</span>
           </motion.div>
           
           <motion.button
@@ -97,9 +92,9 @@ const Landing = () => {
             variants={itemVariants}
             className="text-6xl md:text-8xl font-bold text-foreground mb-8 leading-tight"
           >
-            Blockchain Unified
+           Dynamic Theme-Based  
             <br />
-            <span className="bg-gradient-to-r from-gold to-gold-dark bg-clip-text ">Rebalancing Platform</span>
+            <span className="bg-gradient-to-r from-gold to-gold-dark bg-clip-text ">Investments Dapp</span>
           </motion.h1>
 
           {/* Subtitle */}
@@ -181,9 +176,9 @@ const Landing = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-foreground mb-6">Best Execution</h3>
+              <h3 className="text-2xl font-bold text-foreground mb-6">Thematic Investment Strategies</h3>
               <p className="text-muted-foreground leading-relaxed text-lg">
-                Integrated with 1inch for optimal trade routing and Pyth Network for real-time, accurate price feeds.
+                Curated, AI-managed thematic baskets designed to capture growth opportunities across sectors.
               </p>
             </motion.div>
           </motion.div>
