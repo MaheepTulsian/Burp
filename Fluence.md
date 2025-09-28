@@ -4,7 +4,7 @@ This document records our deployment on Fluence VM and the basic configuration s
 
 ## Deployment Architecture
 
-![Fluence VM Deployment Flow](https://placeholder-image-url.com/deployment-flow.png)
+![Fluence VM Deployment Flow](https://raw.githubusercontent.com/sushilpandeyy/Burp/refs/heads/main/Frontend/public/Screenshot%202025-09-28%20at%2010.21.57%E2%80%AFAM.png)
 
 ## Infrastructure
 
