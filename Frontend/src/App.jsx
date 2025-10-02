@@ -20,6 +20,7 @@ import KYCVerification from './pages/KYCVerification';
 import QRKYCVerification from './pages/QRKYCVerification';
 import SimplifiedKYC from './pages/SimplifiedKYC';
 import ScrollToTop from './components/ScrollToTop';
+import ComingSoon from './pages/Comingsoon';
 
 // Import components
 import Navbar from './components/Navbar';
@@ -72,9 +73,7 @@ const App = () => {
               <Route
                 path="/"
                 element={
-                  isAuthenticated ?
-                  <Navigate to="/dashboard" replace /> :
-                  <Landing />
+                  <ComingSoon/>
                 }
               />
               <Route
